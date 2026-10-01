@@ -59,7 +59,8 @@
     .menu-btn span { width: 18px; height: 2px; border-radius: 2px; background: var(--blue); }
     .drawer-backdrop { position: fixed; inset: 0; z-index: 9; border: 0; background: rgba(13, 31, 56, .34); opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s; }
     .drawer-backdrop.visible { opacity: 1; visibility: visible; }
-    .side-drawer { position: fixed; z-index: 10; inset: 0 0 0 auto; width: 50vw; max-width: 720px; min-width: 320px; padding: 30px; background: white; box-shadow: -16px 0 40px rgba(20, 50, 90, .16); transform: translateX(105%); transition: transform .28s ease; }
+    .side-drawer { position: fixed; z-index: 10; inset: 0 0 0 auto; display: flex; flex-direction: column; overflow-y: auto; width: 50vw; max-width: 720px; min-width: 320px; padding: 30px; background: white; box-shadow: -16px 0 40px rgba(20, 50, 90, .16); transform: translateX(105%); transition: transform .28s ease; }
+    .drawer-account-button { margin-top: auto; align-self: flex-start; }
     .side-drawer.open { transform: translateX(0); }
     .drawer-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
     .drawer-header h2 { margin: 0; font-size: 21px; }
@@ -211,6 +212,7 @@
       <button class="language-option theme-option" id="lightThemeOption" type="button" data-theme="light">Claro</button>
       <button class="language-option theme-option" id="darkThemeOption" type="button" data-theme="dark">Escuro</button>
     </div>
+    <button class="explore publish-button drawer-account-button" id="accountButton" type="button">Entrar</button>
   </aside>
   <div class="modal-backdrop" id="publishModal" hidden>
     <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
@@ -286,7 +288,7 @@
       </div>
       <div class="app-grid" id="appGrid" style="margin-top:18px"></div>
     </section>
-    <aside class="banner"><div class="banner-left"><span class="banner-icon">🛡️</span><div><strong id="bannerTitle">Uma experiência simples e segura</strong><span id="bannerDescription">Descubra seus próximos aplicativos favoritos.</span></div></div><div class="banner-actions"><a class="explore" id="exploreLink" href="#popular-title">Explorar apps</a><button class="explore publish-button" id="accountButton" type="button">Entrar</button><button class="explore publish-button" id="publishOpen" type="button">Publicar app</button><button class="explore publish-button" id="installStoreButton" type="button" hidden>Instalar BlueStore</button></div></aside>
+    <aside class="banner"><div class="banner-left"><span class="banner-icon">🛡️</span><div><strong id="bannerTitle">Uma experiência simples e segura</strong><span id="bannerDescription">Descubra seus próximos aplicativos favoritos.</span></div></div><div class="banner-actions"><a class="explore" id="exploreLink" href="#popular-title">Explorar apps</a><button class="explore publish-button" id="publishOpen" type="button">Publicar app</button><button class="explore publish-button" id="installStoreButton" type="button" hidden>Instalar BlueStore</button></div></aside>
   </main>
   <footer id="footerText">BlueStore · Sua próxima descoberta está a um clique.</footer>
   <script>
@@ -685,7 +687,8 @@
     }
     function closeAuthFlow() {
       authModal.hidden = true; authModal.classList.remove('is-opening'); pendingPublishAfterAuth = false;
-      authForm.reset(); document.getElementById('authError').textContent = ''; syncBackgroundInert(); accountButton.focus();
+      authForm.reset(); document.getElementById('authError').textContent = ''; syncBackgroundInert();
+      (document.getElementById('sideDrawer').classList.contains('open') ? accountButton : document.getElementById('publishOpen')).focus();
     }
     function authErrorMessage(error) {
       const t = translations[currentLanguage];
