@@ -333,7 +333,7 @@
       </div>
       <div class="app-grid" id="appGrid" style="margin-top:18px"></div>
     </section>
-    <aside class="banner"><div class="banner-left"><span class="banner-icon">🛡️</span><div><strong id="bannerTitle">Uma experiência simples e segura</strong><span id="bannerDescription">Descubra seus próximos aplicativos favoritos.</span></div></div><div class="banner-actions"><a class="explore" id="exploreLink" href="#popular-title">Explorar apps</a><button class="explore publish-button" id="publishOpen" type="button">Publicar app</button><button class="explore publish-button" id="installStoreButton" type="button" hidden>Instalar BlueStore</button></div></aside>
+    <aside class="banner"><div class="banner-left"><span class="banner-icon">🛡️</span><div><strong id="bannerTitle">Uma experiência simples e segura</strong><span id="bannerDescription">Descubra seus próximos aplicativos favoritos.</span></div></div><div class="banner-actions"><a class="explore" id="exploreLink" href="#popular-title">Explorar apps</a><button class="explore publish-button" id="installStoreButton" type="button" hidden>Instalar BlueStore</button></div></aside>
   </main>
   <footer id="footerText">BlueStore · Sua próxima descoberta está a um clique.</footer>
   <script>
@@ -473,7 +473,7 @@
       document.getElementById('bannerDescription').textContent = t.bannerDescription;
       document.getElementById('exploreLink').textContent = t.explore;
       document.getElementById('footerText').textContent = t.footer;
-      const localizedElements = { publishOpen: 'publishButton', installStoreButton: 'installStore', dialogTitle: 'publishTitle', step1Title: 'step1Title', fileLabel: 'fileLabel', appNameLabel: 'nameLabel', step1Next: 'next', step2Title: 'step2Title', versionLabel: 'versionLabel', iconLabel: 'iconLabel', iconFileButton: 'chooseImage', packageLabel: 'packageLabel', categoryLabel: 'categoryLabel', step2Next: 'next', confirmPublishText: 'confirmPublish', publishNo: 'no', publishYes: 'yes', cancelBack: 'back', cancelQuestion: 'cancelQuestion', cancelOk: 'ok', downloadQuestion: 'downloadQuestion', downloadNo: 'no', downloadYes: 'yes', updateTitle: 'updateTitle', updateVersionLabel: 'updateVersionLabel', updateFileLabel: 'updateFileLabel', updateCancel: 'updateCancel', updateSubmit: 'updateApp', authTitle: 'authTitle', authEmailLabel: 'emailLabel', authPasswordLabel: 'passwordLabel', authCancel: 'authCancel', authCreate: 'createAccount', authSignIn: 'authSignIn', googleLoginLabel: 'googleLogin', signOutPromptButton: 'accountSignOut', signOutQuestionText: 'signOutQuestion', signOutNoButton: 'no', signOutYesButton: 'yes', loginRequiredText: 'loginRequiredText', loginRequiredGoogleLabel: 'googleLogin' };
+      const localizedElements = { installStoreButton: 'installStore', dialogTitle: 'publishTitle', step1Title: 'step1Title', fileLabel: 'fileLabel', appNameLabel: 'nameLabel', step1Next: 'next', step2Title: 'step2Title', versionLabel: 'versionLabel', iconLabel: 'iconLabel', iconFileButton: 'chooseImage', packageLabel: 'packageLabel', categoryLabel: 'categoryLabel', step2Next: 'next', confirmPublishText: 'confirmPublish', publishNo: 'no', publishYes: 'yes', cancelBack: 'back', cancelQuestion: 'cancelQuestion', cancelOk: 'ok', downloadQuestion: 'downloadQuestion', downloadNo: 'no', downloadYes: 'yes', updateTitle: 'updateTitle', updateVersionLabel: 'updateVersionLabel', updateFileLabel: 'updateFileLabel', updateCancel: 'updateCancel', updateSubmit: 'updateApp', authTitle: 'authTitle', authEmailLabel: 'emailLabel', authPasswordLabel: 'passwordLabel', authCancel: 'authCancel', authCreate: 'createAccount', authSignIn: 'authSignIn', googleLoginLabel: 'googleLogin', signOutPromptButton: 'accountSignOut', signOutQuestionText: 'signOutQuestion', signOutNoButton: 'no', signOutYesButton: 'yes', loginRequiredText: 'loginRequiredText', loginRequiredGoogleLabel: 'googleLogin' };
       Object.entries(localizedElements).forEach(([id, key]) => { const element = document.getElementById(id); if (element) element.textContent = t[key]; });
       document.getElementById('publishClose').setAttribute('aria-label', t.closeDialog);
       document.getElementById('updateClose').setAttribute('aria-label', t.closeDialog);
@@ -720,7 +720,7 @@
     function closeLoginRequiredPrompt() {
       const action = pendingProtectedAction; pendingProtectedAction = null;
       loginRequiredModal.hidden = true; loginRequiredError.textContent = ''; loginRequiredError.hidden = true; syncBackgroundInert();
-      if (action?.type === 'publish') document.getElementById('publishOpen').focus();
+      if (action?.type === 'publish') document.getElementById('exploreLink').focus();
       else if (action?.type === 'download') [...document.querySelectorAll('.custom-download')].find(button => button.dataset.appId === action.appId)?.focus();
     }
     function openAuthFlow(continueToPublish = false) {
@@ -739,7 +739,7 @@
     function closeAuthFlow() {
       authModal.hidden = true; authModal.classList.remove('is-opening'); pendingPublishAfterAuth = false;
       authForm.reset(); document.getElementById('authError').textContent = ''; syncBackgroundInert();
-      (document.getElementById('sideDrawer').classList.contains('open') ? accountButton : document.getElementById('publishOpen')).focus();
+      (document.getElementById('sideDrawer').classList.contains('open') ? accountButton : document.getElementById('exploreLink')).focus();
     }
     function authErrorMessage(error) {
       const t = translations[currentLanguage];
@@ -842,14 +842,13 @@
       publishModal.classList.add('is-opening'); publishModal.hidden = false;
       syncBackgroundInert(); htmlFileInput.focus();
     }
-    function closePublishFlow() { publishModal.hidden = true; publishModal.classList.remove('is-opening'); resetPublishFlow(); syncBackgroundInert(); document.getElementById('publishOpen').focus(); }
+    function closePublishFlow() { publishModal.hidden = true; publishModal.classList.remove('is-opening'); resetPublishFlow(); syncBackgroundInert(); document.getElementById('exploreLink').focus(); }
     function updateStep1Validity() {
       document.getElementById('step1Next').hidden = !(pendingPublication.htmlSelected && appNameInput.value.trim());
     }
     function updateStep2Validity() {
       document.getElementById('step2Next').hidden = !(versionInput.value.trim() && pendingPublication.iconData && packageInput.value.trim() && categoryInput.value.trim());
     }
-    document.getElementById('publishOpen').addEventListener('click', () => { if (currentUser) openPublishFlow(); else openLoginRequiredPrompt({ type: 'publish' }); });
     googleSignInButton.addEventListener('click', signInWithGoogle);
     loginRequiredGoogleButton.addEventListener('click', signInWithGoogle);
     document.getElementById('loginRequiredClose').addEventListener('click', closeLoginRequiredPrompt);
