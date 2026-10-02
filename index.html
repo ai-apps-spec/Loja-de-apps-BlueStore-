@@ -115,8 +115,12 @@
     .app-icon { width: 54px; height: 54px; flex: 0 0 54px; border-radius: 16px; display: grid; place-items: center; font-size: 27px; }
     .icon-blue { background: #e6f1ff; } .icon-purple { background: #f0eaff; } .icon-green { background: #e5f8ef; } .icon-orange { background: #fff0e4; } .icon-pink { background: #ffeaf1; } .icon-cyan { background: #e1f8fc; } .icon-yellow { background: #fff7dd; } .icon-indigo { background: #e9edff; }
     .app-name { min-width: 0; }
-    .app-name h3 { margin: 0 0 4px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .app-name h3 { margin: 0 0 4px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
     .app-name small { color: var(--muted); font-size: 12px; }
+    .app-marquee { display: block; min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; }
+    .app-marquee-text { display: inline-block; width: max-content; max-width: none; white-space: nowrap; }
+    .app-marquee.is-overflowing .app-marquee-text { animation: appTextSlide 5s linear infinite; will-change: transform; }
+    @keyframes appTextSlide { 0%, 60% { transform: translateX(0); } 100% { transform: translateX(var(--app-marquee-end, 0px)); } }
     .app-desc { min-height: 40px; margin: 15px 0 14px; color: #66768c; font-size: 12px; line-height: 1.55; }
     .app-bottom { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
     .rating { font-size: 12px; color: #718096; } .rating strong { color: #df9a16; }
@@ -515,6 +519,28 @@
       render();
       saveState();
     }
+    function createAppMarqueeText(tagName, extraClass, value) {
+      const container = document.createElement(tagName);
+      container.className = [extraClass, 'app-marquee'].filter(Boolean).join(' ');
+      const text = document.createElement('span');
+      text.className = 'app-marquee-text';
+      text.textContent = String(value ?? '');
+      container.appendChild(text);
+      return container;
+    }
+    function refreshAppTextMarquees(root = grid) {
+      root.querySelectorAll('.app-marquee').forEach(container => {
+        const text = container.querySelector('.app-marquee-text');
+        if (!text) return;
+        container.classList.remove('is-overflowing');
+        text.style.removeProperty('--app-marquee-end');
+        const distance = Math.ceil(text.getBoundingClientRect().width - container.clientWidth);
+        if (distance > 1) {
+          text.style.setProperty('--app-marquee-end', `${-distance}px`);
+          container.classList.add('is-overflowing');
+        }
+      });
+    }
     function createCustomAppCard(app, t) {
       const selected = selectedCustomAppId === app.id;
       const card = document.createElement('article');
@@ -529,11 +555,10 @@
       const top = document.createElement('div'); top.className = 'app-top';
       const icon = document.createElement('img'); icon.className = 'custom-app-icon'; icon.src = app.iconData; icon.alt = '';
       const identity = document.createElement('div'); identity.className = 'app-name';
-      const name = document.createElement('h3'); name.textContent = app.name;
-      const version = document.createElement('small'); version.textContent = `${t.versionLabel} ${app.version}`;
+      const name = createAppMarqueeText('h3', '', app.name);
+      const version = createAppMarqueeText('small', '', `${t.versionLabel} ${app.version}`);
       identity.append(name, version); top.append(icon, identity);
-      const details = document.createElement('p'); details.className = 'custom-app-meta';
-      details.textContent = `${t.categoryLabel}: ${app.category || '—'} · ${t.packageLabel}: ${app.packageName}`;
+      const details = createAppMarqueeText('p', 'custom-app-meta', `${t.categoryLabel}: ${app.category || '—'} · ${t.packageLabel}: ${app.packageName}`);
       const bottom = document.createElement('div'); bottom.className = 'app-bottom';
       const status = document.createElement('span');
       status.className = app.downloaded ? 'installed-label' : 'not-installed-label';
@@ -572,11 +597,18 @@
       const filtered = apps.filter(app => (selectedCategory === 'Todos' || app.category === selectedCategory) && `${app.name} ${app.maker} ${app.category} ${app.description}`.toLocaleLowerCase(locale).includes(term));
       const visibleCustomApps = customApps.filter(app => (selectedCategory === 'Todos' || (app.category || '').toLocaleLowerCase(locale) === selectedCategory.toLocaleLowerCase(locale)) && `${app.name} ${app.packageName} ${app.version} ${app.category || ''}`.toLocaleLowerCase(locale).includes(term));
       if (selectedCustomAppId && !visibleCustomApps.some(app => app.id === selectedCustomAppId)) selectedCustomAppId = null;
-      grid.innerHTML = filtered.map(app => { const installed = installedApps.has(app.name); return `<article class="app-card"><div class="app-top"><div class="app-icon ${app.style}">${app.icon}</div><div class="app-name"><h3>${app.name}</h3><small>${app.maker}</small></div></div><p class="app-desc">${app.description}</p><div class="app-bottom"><span class="rating"><strong>★</strong> ${app.rating}</span><button class="install${installed ? ' installed' : ''}" data-app="${app.name}" aria-label="${t.install} ${app.name}">${installed ? t.added : t.install}</button></div></article>`; }).join('');
+      grid.innerHTML = filtered.map(app => { const installed = installedApps.has(app.name); return `<article class="app-card"><div class="app-top"><div class="app-icon ${app.style}">${app.icon}</div><div class="app-name"><h3 class="app-marquee"><span class="app-marquee-text">${app.name}</span></h3><small class="app-marquee"><span class="app-marquee-text">${app.maker}</span></small></div></div><p class="app-desc app-marquee"><span class="app-marquee-text">${app.description}</span></p><div class="app-bottom"><span class="rating"><strong>★</strong> ${app.rating}</span><button class="install${installed ? ' installed' : ''}" data-app="${app.name}" aria-label="${t.install} ${app.name}">${installed ? t.added : t.install}</button></div></article>`; }).join('');
       grid.querySelectorAll('.install').forEach(button => button.addEventListener('click', () => { const name = button.dataset.app; if (installedApps.has(name)) installedApps.delete(name); else installedApps.add(name); saveState(); render(); }));
       visibleCustomApps.forEach(app => grid.appendChild(createCustomAppCard(app, t)));
       if (!filtered.length && !visibleCustomApps.length) grid.innerHTML = `<div class="empty">${t.emptyCatalog}</div>`;
+      requestAnimationFrame(() => refreshAppTextMarquees(grid));
     }
+    let appTextMarqueeResizeTimer = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(appTextMarqueeResizeTimer);
+      appTextMarqueeResizeTimer = window.setTimeout(() => refreshAppTextMarquees(grid), 100);
+    });
+    if (document.fonts?.ready) document.fonts.ready.then(() => refreshAppTextMarquees(grid)).catch(() => {});
     function getAppDatabase() {
       if (!appDatabasePromise) appDatabasePromise = new Promise((resolve, reject) => {
         if (!window.indexedDB) { reject(new Error('IndexedDB indisponível')); return; }
