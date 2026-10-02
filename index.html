@@ -118,8 +118,9 @@
     .app-name h3 { margin: 0 0 4px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
     .app-name small { color: var(--muted); font-size: 12px; }
     .app-marquee { display: block; min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; }
-    .app-marquee-text { display: inline-block; width: max-content; max-width: none; white-space: nowrap; }
-    .app-marquee.is-overflowing .app-marquee-text { animation: appTextSlide 5s linear infinite; will-change: transform; }
+    .app-marquee-track { display: flex; width: max-content; align-items: center; gap: 32px; white-space: nowrap; will-change: transform; }
+    .app-marquee-text { display: inline-block; flex: 0 0 auto; width: max-content; max-width: none; white-space: nowrap; }
+    .app-marquee.is-overflowing .app-marquee-track { animation: appTextSlide 5s linear infinite; }
     @keyframes appTextSlide { 0%, 60% { transform: translateX(0); } 100% { transform: translateX(var(--app-marquee-end, 0px)); } }
     .app-desc { min-height: 40px; margin: 15px 0 14px; color: #66768c; font-size: 12px; line-height: 1.55; }
     .app-bottom { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -522,21 +523,29 @@
     function createAppMarqueeText(tagName, extraClass, value) {
       const container = document.createElement(tagName);
       container.className = [extraClass, 'app-marquee'].filter(Boolean).join(' ');
-      const text = document.createElement('span');
-      text.className = 'app-marquee-text';
+      const track = document.createElement('span'); track.className = 'app-marquee-track';
+      const text = document.createElement('span'); text.className = 'app-marquee-text';
       text.textContent = String(value ?? '');
-      container.appendChild(text);
+      const copy = document.createElement('span'); copy.className = 'app-marquee-text';
+      copy.textContent = String(value ?? ''); copy.setAttribute('aria-hidden', 'true');
+      track.append(text, copy); container.appendChild(track);
       return container;
+    }
+    function appMarqueeMarkup(value) {
+      const text = String(value ?? '');
+      return `<span class="app-marquee-track"><span class="app-marquee-text">${text}</span><span class="app-marquee-text" aria-hidden="true">${text}</span></span>`;
     }
     function refreshAppTextMarquees(root = grid) {
       root.querySelectorAll('.app-marquee').forEach(container => {
-        const text = container.querySelector('.app-marquee-text');
-        if (!text) return;
+        const track = container.querySelector('.app-marquee-track');
+        const text = track?.querySelector('.app-marquee-text');
+        if (!track || !text) return;
         container.classList.remove('is-overflowing');
-        text.style.removeProperty('--app-marquee-end');
-        const distance = Math.ceil(text.getBoundingClientRect().width - container.clientWidth);
-        if (distance > 1) {
-          text.style.setProperty('--app-marquee-end', `${-distance}px`);
+        track.style.removeProperty('--app-marquee-end');
+        const textWidth = text.getBoundingClientRect().width;
+        const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
+        if (textWidth > container.clientWidth + 1) {
+          track.style.setProperty('--app-marquee-end', `${-(Math.ceil(textWidth + gap))}px`);
           container.classList.add('is-overflowing');
         }
       });
@@ -597,7 +606,7 @@
       const filtered = apps.filter(app => (selectedCategory === 'Todos' || app.category === selectedCategory) && `${app.name} ${app.maker} ${app.category} ${app.description}`.toLocaleLowerCase(locale).includes(term));
       const visibleCustomApps = customApps.filter(app => (selectedCategory === 'Todos' || (app.category || '').toLocaleLowerCase(locale) === selectedCategory.toLocaleLowerCase(locale)) && `${app.name} ${app.packageName} ${app.version} ${app.category || ''}`.toLocaleLowerCase(locale).includes(term));
       if (selectedCustomAppId && !visibleCustomApps.some(app => app.id === selectedCustomAppId)) selectedCustomAppId = null;
-      grid.innerHTML = filtered.map(app => { const installed = installedApps.has(app.name); return `<article class="app-card"><div class="app-top"><div class="app-icon ${app.style}">${app.icon}</div><div class="app-name"><h3 class="app-marquee"><span class="app-marquee-text">${app.name}</span></h3><small class="app-marquee"><span class="app-marquee-text">${app.maker}</span></small></div></div><p class="app-desc app-marquee"><span class="app-marquee-text">${app.description}</span></p><div class="app-bottom"><span class="rating"><strong>★</strong> ${app.rating}</span><button class="install${installed ? ' installed' : ''}" data-app="${app.name}" aria-label="${t.install} ${app.name}">${installed ? t.added : t.install}</button></div></article>`; }).join('');
+      grid.innerHTML = filtered.map(app => { const installed = installedApps.has(app.name); return `<article class="app-card"><div class="app-top"><div class="app-icon ${app.style}">${app.icon}</div><div class="app-name"><h3 class="app-marquee">${appMarqueeMarkup(app.name)}</h3><small class="app-marquee">${appMarqueeMarkup(app.maker)}</small></div></div><p class="app-desc app-marquee">${appMarqueeMarkup(app.description)}</p><div class="app-bottom"><span class="rating"><strong>★</strong> ${app.rating}</span><button class="install${installed ? ' installed' : ''}" data-app="${app.name}" aria-label="${t.install} ${app.name}">${installed ? t.added : t.install}</button></div></article>`; }).join('');
       grid.querySelectorAll('.install').forEach(button => button.addEventListener('click', () => { const name = button.dataset.app; if (installedApps.has(name)) installedApps.delete(name); else installedApps.add(name); saveState(); render(); }));
       visibleCustomApps.forEach(app => grid.appendChild(createCustomAppCard(app, t)));
       if (!filtered.length && !visibleCustomApps.length) grid.innerHTML = `<div class="empty">${t.emptyCatalog}</div>`;
