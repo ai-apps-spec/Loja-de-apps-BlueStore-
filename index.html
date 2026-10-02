@@ -349,10 +349,9 @@
     let pendingProtectedAction = null;
     let publishRequestPending = false;
     let firebaseAuthServicesPromise = null;
-    let firebaseServicesPromise = null;
     let authRequestPending = false;
     let downloadPreparationToken = 0;
-    const firebaseConfig = { apiKey: 'AIzaSyDO1G01kUcyrtEMHkowMMkqQzNChqSkBRI', authDomain: 'bluestore-d6578.firebaseapp.com', projectId: 'bluestore-d6578', storageBucket: 'bluestore-d6578.firebasestorage.app', messagingSenderId: '686018431404', appId: '1:686018431404:web:8fb705fb28e7abaea71209' };
+    const firebaseConfig = { apiKey: 'AIzaSyDO1G01kUcyrtEMHkowMMkqQzNChqSkBRI', authDomain: 'bluestore-d6578.firebaseapp.com', projectId: 'bluestore-d6578', messagingSenderId: '686018431404', appId: '1:686018431404:web:8fb705fb28e7abaea71209' };
     function getFirebaseAuthServices() {
       if (!firebaseAuthServicesPromise) firebaseAuthServicesPromise = (async () => {
         const [appSdk, authSdk] = await Promise.all([
@@ -363,17 +362,6 @@
         return { firebaseApp, auth: authSdk.getAuth(firebaseApp), authSdk };
       })();
       return firebaseAuthServicesPromise;
-    }
-    function getFirebaseServices() {
-      if (!firebaseServicesPromise) firebaseServicesPromise = (async () => {
-        const authServices = await getFirebaseAuthServices();
-        const [firestoreSdk, storageSdk] = await Promise.all([
-          import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),
-          import('https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js')
-        ]);
-        return { ...authServices, db: firestoreSdk.getFirestore(authServices.firebaseApp), firestoreSdk, storage: storageSdk.getStorage(authServices.firebaseApp), storageSdk };
-      })();
-      return firebaseServicesPromise;
     }
     const grid = document.getElementById('appGrid');
     const search = document.getElementById('search');
@@ -589,43 +577,15 @@
         transaction.onabort = () => reject(transaction.error || new Error('Falha ao salvar'));
       });
     }
-    function dataUrlToBlob(dataUrl) {
-      const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl || '');
-      if (!match) throw new Error('Ícone inválido');
-      const binary = atob(match[2]);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      return new Blob([bytes], { type: match[1] });
-    }
-    async function publishCloudApp(app) {
+    async function publishAppLocally(app) {
       if (!currentUser) throw new Error('Autenticação necessária');
-      const services = await getFirebaseServices();
-      const { storage, storageSdk, db, firestoreSdk } = services;
-      const htmlStoragePath = `apps/${currentUser.uid}/${app.id}/versions/${Date.now()}-${Math.random().toString(16).slice(2)}/index.html`;
-      const iconBlob = dataUrlToBlob(app.iconData);
-      const iconExtension = iconBlob.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
-      const iconStoragePath = `apps/${currentUser.uid}/${app.id}/icon.${iconExtension}`;
-      await storageSdk.uploadBytes(storageSdk.ref(storage, htmlStoragePath), new Blob([app.htmlContent], { type: 'text/html;charset=utf-8' }), { contentType: 'text/html;charset=utf-8' });
-      await storageSdk.uploadBytes(storageSdk.ref(storage, iconStoragePath), iconBlob, { contentType: iconBlob.type });
-      const htmlUrl = await storageSdk.getDownloadURL(storageSdk.ref(storage, htmlStoragePath));
-      const iconUrl = await storageSdk.getDownloadURL(storageSdk.ref(storage, iconStoragePath));
-      const cloudApp = { ...app, ownerUid: currentUser.uid, htmlUrl, htmlStoragePath, iconData: iconUrl, iconStoragePath, downloaded: false, fileHandle: null };
-      await firestoreSdk.setDoc(firestoreSdk.doc(db, 'apps', app.id), {
-        id: app.id, name: app.name, version: app.version, packageName: app.packageName, category: app.category,
-        ownerUid: currentUser.uid, htmlUrl, htmlStoragePath, iconUrl, iconStoragePath,
-        createdAt: firestoreSdk.serverTimestamp(), updatedAt: firestoreSdk.serverTimestamp()
-      });
-      return cloudApp;
+      const localApp = { ...app, ownerUid: currentUser.uid, htmlUrl: null, htmlStoragePath: null, iconStoragePath: null, downloaded: false, fileHandle: null };
+      await savePublishedApp(localApp);
+      return localApp;
     }
-    async function updateCloudApp(app, version, htmlContent) {
+    async function updateAppLocally(app, version, htmlContent) {
       if (!currentUser || app.ownerUid !== currentUser.uid) throw new Error('Você não pode atualizar este app');
-      const services = await getFirebaseServices();
-      const { storage, storageSdk, db, firestoreSdk } = services;
-      const htmlStoragePath = `apps/${currentUser.uid}/${app.id}/versions/${Date.now()}-${Math.random().toString(16).slice(2)}/index.html`;
-      await storageSdk.uploadBytes(storageSdk.ref(storage, htmlStoragePath), new Blob([htmlContent], { type: 'text/html;charset=utf-8' }), { contentType: 'text/html;charset=utf-8' });
-      const htmlUrl = await storageSdk.getDownloadURL(storageSdk.ref(storage, htmlStoragePath));
-      await firestoreSdk.updateDoc(firestoreSdk.doc(db, 'apps', app.id), { version, htmlUrl, htmlStoragePath, updatedAt: firestoreSdk.serverTimestamp() });
-      return { ...app, version, htmlContent, htmlUrl, htmlStoragePath, downloaded: false, fileHandle: null };
+      return { ...app, version, htmlContent, htmlUrl: null, htmlStoragePath: null, downloaded: false, fileHandle: null };
     }
     async function verifyCustomAppFiles() {
       let changed = false;
@@ -649,25 +609,9 @@
       return changed;
     }
     async function loadPublishedApps() {
-      let localApps = [];
-      try { localApps = await readPublishedApps(); } catch (error) {}
-      try {
-        const services = await getFirebaseServices();
-        const snapshot = await services.firestoreSdk.getDocs(services.firestoreSdk.collection(services.db, 'apps'));
-        const localById = new Map(localApps.map(app => [app.id, app]));
-        const cloudApps = snapshot.docs.map(item => {
-          const data = item.data(); const cached = localById.get(item.id);
-          const cacheMatches = cached && cached.version === data.version && cached.htmlUrl === data.htmlUrl;
-          return { ...data, id: item.id, iconData: data.iconUrl || cached?.iconData || '', htmlContent: cacheMatches ? cached.htmlContent : undefined, downloaded: cacheMatches ? Boolean(cached.downloaded) : false, fileHandle: cacheMatches ? cached.fileHandle || null : null };
-        });
-        const cloudIds = new Set(cloudApps.map(app => app.id));
-        customApps = [...cloudApps, ...localApps.filter(app => !cloudIds.has(app.id))];
-        await verifyCustomAppFiles();
-      } catch (error) {
-        customApps = localApps;
-        try { await verifyCustomAppFiles(); } catch (ignored) {}
-        if (localApps.length === 0) showToast(translations[currentLanguage].firebaseError);
-      }
+      try { customApps = await readPublishedApps(); }
+      catch (error) { customApps = []; showToast(translations[currentLanguage].storageError); }
+      try { await verifyCustomAppFiles(); } catch (ignored) {}
       render();
     }
     async function initializeFirebaseAuth() {
@@ -979,13 +923,7 @@
     document.getElementById('cancelBack').addEventListener('click', () => showPublishStep(3, 'backward'));
     document.getElementById('cancelOk').addEventListener('click', closePublishFlow);
     function publicationErrorMessage(error) {
-      const t = translations[currentLanguage] || translations['pt-BR'];
-      const code = String(error?.code || '').toLowerCase();
-      const message = `${error?.message || ''} ${error?.customData?.serverResponse || ''}`.toLowerCase();
-      if (!currentUser || code.startsWith('auth/')) return t.publishAuthRequired;
-      if (['storage/bucket-not-found', 'storage/no-default-bucket'].includes(code) || message.includes('bucket') || message.includes('404')) return t.publishStorageError;
-      if (['storage/unauthorized', 'permission-denied'].includes(code) || message.includes('permission')) return t.publishPermissionError;
-      return t.publishFailure;
+      return currentUser ? translations[currentLanguage].storageError : translations[currentLanguage].publishAuthRequired;
     }
     const publishYesButton = document.getElementById('publishYes');
     const publishNoButton = document.getElementById('publishNo');
@@ -1000,9 +938,8 @@
       publishNoButton.disabled = true; publishCloseButton.disabled = true;
       try {
         const app = { id: `app-${Date.now()}-${Math.random().toString(16).slice(2)}`, name: pendingPublication.name, version: pendingPublication.version, packageName: pendingPublication.packageName, category: pendingPublication.category, iconData: pendingPublication.iconData, htmlContent: pendingPublication.htmlContent, downloaded: false };
-        const cloudApp = await publishCloudApp(app);
-        customApps.push(cloudApp);
-        try { await savePublishedApp(cloudApp); } catch (cacheError) {}
+        const localApp = await publishAppLocally(app);
+        customApps.push(localApp);
         render(); closePublishFlow(); showToast(translations[currentLanguage].publishSuccess);
       } catch (error) {
         publishError.textContent = publicationErrorMessage(error); publishError.hidden = false;
@@ -1074,10 +1011,10 @@
       if (!app || !file || !version) return;
       if (file.name.toLowerCase() !== 'index.html') { error.textContent = translations[currentLanguage].fileError; return; }
       try {
-        const updatedApp = await updateCloudApp(app, version, await file.text());
-        try { await savePublishedApp(updatedApp); } catch (cacheError) {}
+        const updatedApp = await updateAppLocally(app, version, await file.text());
+        await savePublishedApp(updatedApp);
         Object.assign(app, updatedApp); render(); closeUpdateFlow(); showToast(translations[currentLanguage].updateSuccess);
-      } catch (updateError) { error.textContent = translations[currentLanguage].firebaseError; }
+      } catch (updateError) { error.textContent = translations[currentLanguage].storageError; }
     });
     function downloadAppFile(app) {
       const url = URL.createObjectURL(new Blob([app.htmlContent], { type: 'text/html;charset=utf-8' }));
