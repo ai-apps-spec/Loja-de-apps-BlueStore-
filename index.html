@@ -156,6 +156,15 @@
     body.dark-theme .language-option { background: #172438; color: #c4d1e2; }
     body.dark-theme .language-option:hover, body.dark-theme .language-option.selected { border-color: #557fb6; background: #203d63; color: #c2dcff; }
     .banner-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .games-help-control { position: relative; display: flex; align-items: center; }
+    .games-help-button { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; color: var(--blue); font-family: inherit; font-size: 18px; font-weight: 750; line-height: 1; cursor: pointer; transition: .18s; }
+    .games-help-button:hover, .games-help-button[aria-expanded="true"] { border-color: var(--blue); background: var(--blue); color: white; }
+    .games-help-popover { position: absolute; z-index: 20; right: 0; bottom: calc(100% + 10px); width: min(280px, calc(100vw - 40px)); padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; background: white; color: #14243a; box-shadow: 0 14px 36px rgba(7, 25, 49, .2); text-align: left; font-size: 13px; line-height: 1.55; }
+    .games-help-popover[hidden] { display: none; }
+    .games-help-popover p { margin: 0; text-align: left; }
+    body.dark-theme .games-help-popover { background: var(--white); color: var(--ink); }
+    body.dark-theme .games-help-button { border-color: var(--line); background: #172438; color: #b8d5ff; }
+    body.dark-theme .games-help-button:hover, body.dark-theme .games-help-button[aria-expanded="true"] { border-color: var(--blue); background: var(--blue); color: white; }
     .publish-button { border: 0; cursor: pointer; font-family: inherit; }
     .publish-button[hidden] { display: none; }
     .modal-backdrop { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(13, 31, 56, .48); }
@@ -361,7 +370,7 @@
       </div>
       <div class="app-grid" id="appGrid" style="margin-top:18px"></div>
     </section>
-    <aside class="banner"><div class="banner-left"><span class="banner-icon">🛡️</span><div><strong id="bannerTitle">Uma experiência simples e segura</strong><span id="bannerDescription">Descubra seus próximos aplicativos favoritos.</span></div></div><div class="banner-actions"><a class="explore" id="exploreLink" href="#popular-title">Explorar apps</a><button class="explore publish-button" id="installStoreButton" type="button" hidden>Instalar BlueStore</button></div></aside>
+    <aside class="banner"><div class="banner-left"><span class="banner-icon">🛡️</span><div><strong id="bannerTitle">Uma experiência simples e segura</strong><span id="bannerDescription">Descubra seus próximos aplicativos favoritos.</span></div></div><div class="banner-actions"><a class="explore" id="exploreLink" href="#popular-title">Explorar apps</a><div class="games-help-control" id="gamesHelpControl"><button class="games-help-button" id="gamesHelpButton" type="button" aria-label="Informações sobre novidades" aria-expanded="false" aria-controls="gamesHelpPopover">?</button><div class="games-help-popover" id="gamesHelpPopover" role="dialog" aria-label="Novidades da BlueStore" tabindex="-1" hidden><p>Em breve terá jogos também aqui na BlueStore, e mais apps</p></div></div><button class="explore publish-button" id="installStoreButton" type="button" hidden>Instalar BlueStore</button></div></aside>
   </main>
   <footer id="footerText">BlueStore · Sua próxima descoberta está a um clique.</footer>
   <script>
@@ -1243,7 +1252,20 @@
     menuButton.addEventListener('click', () => setDrawer(true));
     document.getElementById('drawerClose').addEventListener('click', () => setDrawer(false));
     backdrop.addEventListener('click', () => setDrawer(false));
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') { if (!signOutModal.hidden) closeSignOutConfirmation(); else if (!loginRequiredModal.hidden) closeLoginRequiredPrompt(); else if (!appDetailsModal.hidden) closeAppDetails(); else if (!downloadModal.hidden) closeDownloadConfirmation(); else if (!updateModal.hidden) closeUpdateFlow(); else if (!authModal.hidden) closeAuthFlow(); else if (!publishModal.hidden && !publishRequestPending) closePublishFlow(); setDrawer(false); } });
+    const gamesHelpControl = document.getElementById('gamesHelpControl');
+    const gamesHelpButton = document.getElementById('gamesHelpButton');
+    const gamesHelpPopover = document.getElementById('gamesHelpPopover');
+    function setGamesHelpOpen(open, restoreFocus = false) {
+      gamesHelpPopover.hidden = !open;
+      gamesHelpButton.setAttribute('aria-expanded', String(open));
+      if (open) gamesHelpPopover.focus();
+      else if (restoreFocus) gamesHelpButton.focus();
+    }
+    gamesHelpButton.addEventListener('click', () => setGamesHelpOpen(gamesHelpPopover.hidden));
+    document.addEventListener('click', event => {
+      if (!gamesHelpPopover.hidden && !gamesHelpControl.contains(event.target)) setGamesHelpOpen(false);
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { if (!gamesHelpPopover.hidden) { setGamesHelpOpen(false, true); return; } if (!signOutModal.hidden) closeSignOutConfirmation(); else if (!loginRequiredModal.hidden) closeLoginRequiredPrompt(); else if (!appDetailsModal.hidden) closeAppDetails(); else if (!downloadModal.hidden) closeDownloadConfirmation(); else if (!updateModal.hidden) closeUpdateFlow(); else if (!authModal.hidden) closeAuthFlow(); else if (!publishModal.hidden && !publishRequestPending) closePublishFlow(); setDrawer(false); } });
     const languageToggle = document.getElementById('languageToggle');
     const languageOptions = document.getElementById('languageOptions');
     languageToggle.setAttribute('aria-expanded', String(languageExpanded));
