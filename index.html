@@ -162,6 +162,7 @@
     .games-help-popover { position: absolute; z-index: 20; right: 0; bottom: calc(100% + 10px); width: min(280px, calc(100vw - 40px)); padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; background: white; color: #14243a; box-shadow: 0 14px 36px rgba(7, 25, 49, .2); text-align: left; font-size: 13px; line-height: 1.55; }
     .games-help-popover[hidden] { display: none; }
     .games-help-popover p { margin: 0; text-align: left; }
+    @media (max-width: 600px) { .games-help-popover { right: auto; left: 50%; transform: translateX(-50%); width: min(280px, calc(100vw - 40px)); } }
     body.dark-theme .games-help-popover { background: var(--white); color: var(--ink); }
     body.dark-theme .games-help-button { border-color: var(--line); background: #172438; color: #b8d5ff; }
     body.dark-theme .games-help-button:hover, body.dark-theme .games-help-button[aria-expanded="true"] { border-color: var(--blue); background: var(--blue); color: white; }
