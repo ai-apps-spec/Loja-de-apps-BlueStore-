@@ -424,7 +424,7 @@
     };
     const FEATURED_LOCAL_APPS = [FEATURED_LOCAL_APP, FEATURED_DICTIONARY_APP];
 
-    let customApps = [];
+    let customApps = [...FEATURED_LOCAL_APPS];
     let appDatabasePromise = null;
     let pendingPublication = {};
     let selectedDownloadAppId = null;
@@ -792,8 +792,26 @@
       return changed;
     }
     async function loadPublishedApps() {
-      try { await syncFeaturedLocalApps(); customApps = sortFeaturedApps(await readPublishedApps()); }
-      catch (error) { customApps = []; showToast(translations[currentLanguage].storageError); }
+      let savedApps = [];
+      let storageFailed = false;
+      try {
+        await syncFeaturedLocalApps();
+        savedApps = await readPublishedApps();
+      } catch (error) {
+        storageFailed = true;
+        try { savedApps = await readPublishedApps(); } catch (ignored) {}
+      }
+      const normalizeName = value => String(value || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+      const featuredIds = new Set(FEATURED_LOCAL_APPS.map(app => app.id));
+      const featuredNames = new Set(FEATURED_LOCAL_APPS.map(app => normalizeName(app.name)));
+      const savedById = new Map(savedApps.map(app => [app.id, app]));
+      const bundledFeatured = FEATURED_LOCAL_APPS.map(app => {
+        const current = savedById.get(app.id);
+        return { ...app, downloaded: Boolean(current?.downloaded), fileHandle: current?.fileHandle || null, pwaLocalStorage: current?.pwaLocalStorage || {} };
+      });
+      const otherApps = savedApps.filter(app => !featuredIds.has(app.id) && !featuredNames.has(normalizeName(app.name)));
+      customApps = sortFeaturedApps([...bundledFeatured, ...otherApps]);
+      if (storageFailed) showToast(translations[currentLanguage].storageError);
       try { await verifyCustomAppFiles(); } catch (ignored) {}
       render();
     }
