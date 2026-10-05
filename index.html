@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="BlueStore" />
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <link rel="manifest" id="webManifest" />
+  <link rel="icon" type="image/png" sizes="192x192" id="appFavicon" />
+  <link rel="apple-touch-icon" id="appleTouchIcon" />
   <title>BlueStore — Loja de aplicativos</title>
   <style>
     :root {
@@ -163,6 +163,22 @@
     .games-help-popover[hidden] { display: none; }
     .games-help-popover p { margin: 0; text-align: left; }
     @media (max-width: 600px) { .games-help-popover { right: auto; left: 50%; transform: translateX(-50%); width: min(280px, calc(100vw - 40px)); } }
+    .pwa-app-shell[hidden] { display: none !important; }
+    .pwa-app-shell:not([hidden]) { position: fixed; z-index: 100; inset: 0; width: 100%; height: 100dvh; max-width: none; margin: 0; padding: 0; display: flex; flex-direction: column; background: #fff; color: #14243a; }
+    body.pwa-app-mode > .topbar, body.pwa-app-mode > #inicio, body.pwa-app-mode > footer { display: none !important; }
+    .pwa-app-header { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 16px; border-bottom: 1px solid #e7edf5; background: #fff; }
+    .pwa-back-link { flex: 0 0 auto; color: #1769e0; text-decoration: none; font-size: 13px; font-weight: 750; white-space: nowrap; }
+    .pwa-app-identity { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .pwa-app-identity img { width: 40px; height: 40px; border-radius: 11px; object-fit: cover; background: #eaf3ff; }
+    .pwa-app-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+    .pwa-install-button { flex: 0 0 auto; border: 0; border-radius: 10px; padding: 10px 12px; background: #1769e0; color: #fff; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+    .pwa-install-button[hidden] { display: none; }
+    .pwa-install-help { margin: 0; padding: 10px 16px; background: #eaf3ff; color: #284a78; font-size: 13px; line-height: 1.45; }
+    .pwa-app-frame { display: block; flex: 1 1 auto; width: 100%; min-height: 0; border: 0; background: #fff; }
+    .pwa-app-error { margin: auto; max-width: 520px; padding: 28px; text-align: center; color: #52657e; line-height: 1.5; }
+    body.dark-theme .pwa-app-header { border-color: #34465d; background: #1b2a3d; color: #edf4ff; }
+    body.dark-theme .pwa-install-help { background: #203d63; color: #d5e5fb; }
+    @media (max-width: 560px) { .pwa-app-header { gap: 8px; padding: 9px 10px; } .pwa-back-link { max-width: 78px; overflow: hidden; font-size: 11px; } .pwa-app-identity { gap: 7px; } .pwa-app-identity img { width: 34px; height: 34px; } .pwa-app-identity strong { font-size: 13px; } .pwa-install-button { padding: 9px 10px; font-size: 11px; } }
     body.dark-theme .games-help-popover { background: var(--white); color: var(--ink); }
     body.dark-theme .games-help-button { border-color: var(--line); background: #172438; color: #b8d5ff; }
     body.dark-theme .games-help-button:hover, body.dark-theme .games-help-button[aria-expanded="true"] { border-color: var(--blue); background: var(--blue); color: white; }
@@ -373,6 +389,16 @@
     </section>
     <aside class="banner"><div class="banner-left"><span class="banner-icon">🛡️</span><div><strong id="bannerTitle">Uma experiência simples e segura</strong><span id="bannerDescription">Descubra seus próximos aplicativos favoritos.</span></div></div><div class="banner-actions"><a class="explore" id="exploreLink" href="#popular-title">Explorar apps</a><div class="games-help-control" id="gamesHelpControl"><button class="games-help-button" id="gamesHelpButton" type="button" aria-label="Informações sobre novidades" aria-expanded="false" aria-controls="gamesHelpPopover">?</button><div class="games-help-popover" id="gamesHelpPopover" role="dialog" aria-label="Novidades da BlueStore" tabindex="-1" hidden><p>Em breve terá jogos também aqui na BlueStore, e mais apps</p></div></div><button class="explore publish-button" id="installStoreButton" type="button" hidden>Instalar BlueStore</button></div></aside>
   </main>
+  <main id="pwaAppShell" class="pwa-app-shell" hidden>
+    <header class="pwa-app-header">
+      <a class="pwa-back-link" id="pwaBackLink" href="./">← Voltar à BlueStore</a>
+      <div class="pwa-app-identity"><img id="pwaAppIcon" alt=""><strong id="pwaAppTitle"></strong></div>
+      <button class="pwa-install-button" id="installSpecificAppButton" type="button" hidden>Adicionar à tela inicial</button>
+    </header>
+    <p class="pwa-install-help" id="pwaInstallHelp" hidden></p>
+    <p class="pwa-app-error" id="pwaAppError" hidden></p>
+    <iframe class="pwa-app-frame" id="pwaAppFrame" title="Aplicativo BlueStore" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads" referrerpolicy="no-referrer"></iframe>
+  </main>
   <footer id="footerText">BlueStore · Sua próxima descoberta está a um clique.</footer>
   <script>
     const apps = [];
@@ -426,9 +452,9 @@
     const searchMarqueeText = document.getElementById('searchMarqueeText');
     const searchMarqueeCopy = document.getElementById('searchMarqueeCopy');
     const translations = {
-      'pt-BR': { title: 'BlueStore — Loja de aplicativos', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Buscar aplicativos...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'Os apps certos para<br>o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e se divertir — tudo em um só lugar.', popular: 'Aplicativos populares', popularDescription: 'Uma seleção para você começar a explorar.', categories: 'Categorias', all: 'Todos', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Nenhum aplicativo cadastrado ainda.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra seus próximos aplicativos favoritos.', explore: 'Explorar apps', footer: 'BlueStore · Sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionado ✓', accountSignIn: 'Login/entrar', accountSignOut: 'Sair', signOutQuestion: 'Deseja sair da conta?', loginRequiredText: 'Cadastra-se para realizar a ação', googleLogin: 'Entrar com o Google', googleDisabled: 'Ative o provedor Google em Firebase Authentication > Sign-in method.', googlePopupBlocked: 'O navegador bloqueou a janela de login do Google. Permita pop-ups para este site e tente novamente.', googlePopupClosed: 'O login com o Google foi cancelado.', googleConflict: 'Este e-mail já está cadastrado com outro método de acesso. Entre por esse método primeiro.', googleGeneric: 'Não foi possível entrar com o Google. Tente novamente.', authTitle: 'Acesse a BlueStore', emailLabel: 'E-mail', passwordLabel: 'Senha', createAccount: 'Criar conta', authSignIn: 'Entrar', authCancel: 'Cancelar', authGeneric: 'Não foi possível entrar. Confira os dados e tente novamente.', authBadEmail: 'Digite um endereço de e-mail válido.', authDomain: 'Este domínio não está autorizado no Firebase. Hospede a BlueStore em HTTPS e autorize o domínio no Firebase Console.', authNetwork: 'Sem conexão com o Firebase. Verifique sua internet e tente novamente.', authDisabled: 'Ative o provedor E-mail/senha no Firebase Authentication.', authExists: 'Este e-mail já está cadastrado.', authWeak: 'A senha precisa ter pelo menos 6 caracteres.', authInvalid: 'E-mail ou senha incorretos.', authTooMany: 'Muitas tentativas. Tente novamente mais tarde.', downloadLoadError: 'Não foi possível carregar o app. Tente novamente.', downloadPreparing: 'Carregando app...', firebaseError: 'Não foi possível conectar ao Firebase. Verifique os serviços do projeto.', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados do aplicativo', fileLabel: 'Arquivo index.html', nameLabel: 'Nome do app', next: 'Próximo', step2Title: 'Detalhes do aplicativo', versionLabel: 'Versão', statusLabel: 'Status', yes: 'Sim', no: 'Não', iconLabel: 'Ícone do app', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esse app?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Baixar esse app?', updateApp: 'Atualizar app', updateTitle: 'Atualize seu app', updateVersionLabel: 'Versão do app', updateFileLabel: 'Arquivo index.html', updateCancel: 'Cancelar', updateSuccess: 'App atualizado na BlueStore.', downloadButton: 'Download', installed: 'Instalado ✓', notInstalled: 'Não instalado', fileError: 'Selecione um arquivo chamado index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'App publicado na BlueStore.', publishPending: 'Publicando…', publishAuthRequired: 'Entre na conta para publicar o app.', publishStorageError: 'O Firebase Storage não está habilitado ou o bucket do projeto não foi configurado.', publishPermissionError: 'O Firebase recusou a publicação por falta de permissão no Storage ou no Firestore.', publishFailure: 'Não foi possível publicar. Confira sua conexão e tente novamente.', downloadSuccess: 'Arquivo do app baixado pelo navegador.', installStore: 'Instalar BlueStore', storageError: 'Não foi possível salvar este app neste navegador.', emptyCatalog: 'Nenhum aplicativo cadastrado ainda.' },
-      'pt-PT': { title: 'BlueStore — Loja de aplicações', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Pesquisar aplicações...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'As aplicações certas<br>para o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e divertir-se — tudo num só lugar.', popular: 'Aplicações populares', popularDescription: 'Uma seleção para começar a explorar.', categories: 'Categorias', all: 'Todas', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Ainda não há aplicações adicionadas.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra as suas próximas aplicações favoritas.', explore: 'Explorar aplicações', footer: 'BlueStore · A sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionada ✓', accountSignIn: 'Login/entrar', accountSignOut: 'Sair', signOutQuestion: 'Pretende sair da conta?', loginRequiredText: 'Registe-se para realizar esta ação', googleLogin: 'Iniciar sessão com o Google', googleDisabled: 'Ative o fornecedor Google em Firebase Authentication > Sign-in method.', googlePopupBlocked: 'O navegador bloqueou a janela de início de sessão do Google. Permita pop-ups para este site e tente novamente.', googlePopupClosed: 'O início de sessão com o Google foi cancelado.', googleConflict: 'Este e-mail já está registado com outro método. Inicie sessão por esse método primeiro.', googleGeneric: 'Não foi possível iniciar sessão com o Google. Tente novamente.', authTitle: 'Aceda à BlueStore', emailLabel: 'E-mail', passwordLabel: 'Palavra-passe', createAccount: 'Criar conta', authSignIn: 'Entrar', authCancel: 'Cancelar', authGeneric: 'Não foi possível iniciar sessão. Confira os dados e tente novamente.', authBadEmail: 'Introduza um endereço de e-mail válido.', authDomain: 'Este domínio não está autorizado no Firebase. Aloje a BlueStore em HTTPS e autorize o domínio na Firebase Console.', authNetwork: 'Sem ligação ao Firebase. Verifique a internet e tente novamente.', authDisabled: 'Ative o fornecedor E-mail/palavra-passe no Firebase Authentication.', authExists: 'Este e-mail já está registado.', authWeak: 'A palavra-passe deve ter pelo menos 6 caracteres.', authInvalid: 'E-mail ou palavra-passe incorretos.', authTooMany: 'Demasiadas tentativas. Tente novamente mais tarde.', downloadLoadError: 'Não foi possível carregar a aplicação. Tente novamente.', downloadPreparing: 'A carregar a aplicação...', firebaseError: 'Não foi possível ligar ao Firebase. Verifique os serviços do projeto.', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados da aplicação', fileLabel: 'Ficheiro index.html', nameLabel: 'Nome da aplicação', next: 'Seguinte', step2Title: 'Detalhes da aplicação', versionLabel: 'Versão', statusLabel: 'Estado', yes: 'Sim', no: 'Não', iconLabel: 'Ícone da aplicação', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esta aplicação?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Transferir esta aplicação?', updateApp: 'Atualizar app', updateTitle: 'Atualize a sua aplicação', updateVersionLabel: 'Versão da aplicação', updateFileLabel: 'Ficheiro index.html', updateCancel: 'Cancelar', updateSuccess: 'Aplicação atualizada na BlueStore.', downloadButton: 'Transferir', installed: 'Instalada ✓', notInstalled: 'Não instalada', fileError: 'Selecione um ficheiro com o nome index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'Aplicação publicada na BlueStore.', publishPending: 'A publicar…', publishAuthRequired: 'Inicie sessão para publicar a aplicação.', publishStorageError: 'O Firebase Storage não está ativo ou o bucket do projeto não foi configurado.', publishPermissionError: 'O Firebase recusou a publicação por falta de permissões no Storage ou no Firestore.', publishFailure: 'Não foi possível publicar. Verifique a ligação e tente novamente.', downloadSuccess: 'Ficheiro da aplicação transferido pelo navegador.', installStore: 'Instalar BlueStore', storageError: 'Não foi possível guardar esta aplicação neste navegador.', emptyCatalog: 'Ainda não há aplicações adicionadas.' },
-      en: { title: 'BlueStore — App Store', menu: 'Menu', close: 'Close menu', languages: 'Languages', themes: 'Themes', light: 'Light', dark: 'Dark', search: 'Search apps...', featured: 'Featured', eyebrow: 'Discover something new', hero: 'The right apps for<br>your everyday life.', heroDescription: 'Explore amazing tools to work, learn, create, and have fun — all in one place.', popular: 'Popular apps', popularDescription: 'A selection to get you started.', categories: 'Categories', all: 'All', productivity: 'Productivity', design: 'Design', finance: 'Finance', entertainment: 'Entertainment', empty: 'No apps have been added yet.', bannerTitle: 'A simple and secure experience', bannerDescription: 'Discover your next favorite apps.', explore: 'Explore apps', footer: 'BlueStore · Your next discovery is one click away.', install: 'Install', added: 'Added ✓', accountSignIn: 'Sign in', accountSignOut: 'Sign out', signOutQuestion: 'Do you want to sign out?', loginRequiredText: 'Create an account to perform this action', googleLogin: 'Sign in with Google', googleDisabled: 'Enable the Google provider in Firebase Authentication > Sign-in method.', googlePopupBlocked: 'Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.', googlePopupClosed: 'Google sign-in was cancelled.', googleConflict: 'This email is already registered with another sign-in method. Sign in with that method first.', googleGeneric: 'Could not sign in with Google. Please try again.', authTitle: 'Sign in to BlueStore', emailLabel: 'Email', passwordLabel: 'Password', createAccount: 'Create account', authSignIn: 'Sign in', authCancel: 'Cancel', authGeneric: 'Could not sign in. Check your details and try again.', authBadEmail: 'Enter a valid email address.', authDomain: 'This domain is not authorized in Firebase. Host BlueStore over HTTPS and authorize the domain in Firebase Console.', authNetwork: 'Cannot connect to Firebase. Check your internet connection and try again.', authDisabled: 'Enable the Email/Password provider in Firebase Authentication.', authExists: 'This email is already registered.', authWeak: 'Password must be at least 6 characters.', authInvalid: 'Incorrect email or password.', authTooMany: 'Too many attempts. Try again later.', downloadLoadError: 'Could not load the app. Please try again.', downloadPreparing: 'Loading app...', firebaseError: 'Could not connect to Firebase. Check that the project services are enabled.', publishButton: 'Publish app', publishTitle: 'Publish app', closeDialog: 'Close', step1Title: 'App information', fileLabel: 'index.html file', nameLabel: 'App name', next: 'Next', step2Title: 'App details', versionLabel: 'Version', statusLabel: 'Status', yes: 'Yes', no: 'No', iconLabel: 'App icon', chooseImage: 'Choose image', noImageSelected: 'No image selected', packageLabel: 'Package name', packagePlaceholder: 'com.example.app', categoryLabel: 'Category', confirmPublish: 'Do you want to publish this app?', cancelQuestion: 'Do you want to cancel?', back: '← Back', ok: 'OK', downloadQuestion: 'Download this app?', updateApp: 'Update app', updateTitle: 'Update your app', updateVersionLabel: 'App version', updateFileLabel: 'index.html file', updateCancel: 'Cancel', updateSuccess: 'App updated in BlueStore.', downloadButton: 'Download', installed: 'Installed ✓', notInstalled: 'Not installed', fileError: 'Choose a file named index.html.', detailsError: 'Complete every field, including category, and choose an icon.', publishSuccess: 'App published to BlueStore.', publishPending: 'Publishing…', publishAuthRequired: 'Sign in to publish this app.', publishStorageError: 'Firebase Storage is disabled or the project bucket is not configured.', publishPermissionError: 'Firebase denied publishing because Storage or Firestore permissions are missing.', publishFailure: 'Could not publish. Check your connection and try again.', downloadSuccess: 'App file downloaded by the browser.', installStore: 'Install BlueStore', storageError: 'This app could not be saved in this browser.', emptyCatalog: 'No apps have been added yet.' }
+      'pt-BR': { title: 'BlueStore — Loja de aplicativos', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Buscar aplicativos...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'Os apps certos para<br>o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e se divertir — tudo em um só lugar.', popular: 'Aplicativos populares', popularDescription: 'Uma seleção para você começar a explorar.', categories: 'Categorias', all: 'Todos', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Nenhum aplicativo cadastrado ainda.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra seus próximos aplicativos favoritos.', explore: 'Explorar apps', footer: 'BlueStore · Sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionado ✓', accountSignIn: 'Login/entrar', accountSignOut: 'Sair', signOutQuestion: 'Deseja sair da conta?', loginRequiredText: 'Cadastra-se para realizar a ação', googleLogin: 'Entrar com o Google', googleDisabled: 'Ative o provedor Google em Firebase Authentication > Sign-in method.', googlePopupBlocked: 'O navegador bloqueou a janela de login do Google. Permita pop-ups para este site e tente novamente.', googlePopupClosed: 'O login com o Google foi cancelado.', googleConflict: 'Este e-mail já está cadastrado com outro método de acesso. Entre por esse método primeiro.', googleGeneric: 'Não foi possível entrar com o Google. Tente novamente.', authTitle: 'Acesse a BlueStore', emailLabel: 'E-mail', passwordLabel: 'Senha', createAccount: 'Criar conta', authSignIn: 'Entrar', authCancel: 'Cancelar', authGeneric: 'Não foi possível entrar. Confira os dados e tente novamente.', authBadEmail: 'Digite um endereço de e-mail válido.', authDomain: 'Este domínio não está autorizado no Firebase. Hospede a BlueStore em HTTPS e autorize o domínio no Firebase Console.', authNetwork: 'Sem conexão com o Firebase. Verifique sua internet e tente novamente.', authDisabled: 'Ative o provedor E-mail/senha no Firebase Authentication.', authExists: 'Este e-mail já está cadastrado.', authWeak: 'A senha precisa ter pelo menos 6 caracteres.', authInvalid: 'E-mail ou senha incorretos.', authTooMany: 'Muitas tentativas. Tente novamente mais tarde.', downloadLoadError: 'Não foi possível carregar o app. Tente novamente.', downloadPreparing: 'Carregando app...', firebaseError: 'Não foi possível conectar ao Firebase. Verifique os serviços do projeto.', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados do aplicativo', fileLabel: 'Arquivo index.html', nameLabel: 'Nome do app', next: 'Próximo', step2Title: 'Detalhes do aplicativo', versionLabel: 'Versão', statusLabel: 'Status', yes: 'Sim', no: 'Não', iconLabel: 'Ícone do app', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esse app?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Baixar esse app?', updateApp: 'Atualizar app', updateTitle: 'Atualize seu app', updateVersionLabel: 'Versão do app', updateFileLabel: 'Arquivo index.html', updateCancel: 'Cancelar', updateSuccess: 'App atualizado na BlueStore.', downloadButton: 'Download', installed: 'Instalado ✓', notInstalled: 'Não instalado', fileError: 'Selecione um arquivo chamado index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'App publicado na BlueStore.', publishPending: 'Publicando…', publishAuthRequired: 'Entre na conta para publicar o app.', publishStorageError: 'O Firebase Storage não está habilitado ou o bucket do projeto não foi configurado.', publishPermissionError: 'O Firebase recusou a publicação por falta de permissão no Storage ou no Firestore.', publishFailure: 'Não foi possível publicar. Confira sua conexão e tente novamente.', downloadSuccess: 'Arquivo do app baixado pelo navegador.', installStore: 'Instalar BlueStore', installApp: 'Adicionar à tela inicial', backToStore: '← Voltar à BlueStore', installHelpAndroid: 'No Android, use o botão de instalação ou o menu ⋮ do navegador e escolha “Instalar app” ou “Adicionar à tela inicial”.', installHelpIOS: 'No iPhone/iPad, abra no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.', appUnavailable: 'Este app não está disponível neste navegador. Volte à BlueStore e baixe-o novamente aqui.', storageError: 'Não foi possível salvar este app neste navegador.', emptyCatalog: 'Nenhum aplicativo cadastrado ainda.' },
+      'pt-PT': { title: 'BlueStore — Loja de aplicações', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Pesquisar aplicações...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'As aplicações certas<br>para o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e divertir-se — tudo num só lugar.', popular: 'Aplicações populares', popularDescription: 'Uma seleção para começar a explorar.', categories: 'Categorias', all: 'Todas', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Ainda não há aplicações adicionadas.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra as suas próximas aplicações favoritas.', explore: 'Explorar aplicações', footer: 'BlueStore · A sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionada ✓', accountSignIn: 'Login/entrar', accountSignOut: 'Sair', signOutQuestion: 'Pretende sair da conta?', loginRequiredText: 'Registe-se para realizar esta ação', googleLogin: 'Iniciar sessão com o Google', googleDisabled: 'Ative o fornecedor Google em Firebase Authentication > Sign-in method.', googlePopupBlocked: 'O navegador bloqueou a janela de início de sessão do Google. Permita pop-ups para este site e tente novamente.', googlePopupClosed: 'O início de sessão com o Google foi cancelado.', googleConflict: 'Este e-mail já está registado com outro método. Inicie sessão por esse método primeiro.', googleGeneric: 'Não foi possível iniciar sessão com o Google. Tente novamente.', authTitle: 'Aceda à BlueStore', emailLabel: 'E-mail', passwordLabel: 'Palavra-passe', createAccount: 'Criar conta', authSignIn: 'Entrar', authCancel: 'Cancelar', authGeneric: 'Não foi possível iniciar sessão. Confira os dados e tente novamente.', authBadEmail: 'Introduza um endereço de e-mail válido.', authDomain: 'Este domínio não está autorizado no Firebase. Aloje a BlueStore em HTTPS e autorize o domínio na Firebase Console.', authNetwork: 'Sem ligação ao Firebase. Verifique a internet e tente novamente.', authDisabled: 'Ative o fornecedor E-mail/palavra-passe no Firebase Authentication.', authExists: 'Este e-mail já está registado.', authWeak: 'A palavra-passe deve ter pelo menos 6 caracteres.', authInvalid: 'E-mail ou palavra-passe incorretos.', authTooMany: 'Demasiadas tentativas. Tente novamente mais tarde.', downloadLoadError: 'Não foi possível carregar a aplicação. Tente novamente.', downloadPreparing: 'A carregar a aplicação...', firebaseError: 'Não foi possível ligar ao Firebase. Verifique os serviços do projeto.', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados da aplicação', fileLabel: 'Ficheiro index.html', nameLabel: 'Nome da aplicação', next: 'Seguinte', step2Title: 'Detalhes da aplicação', versionLabel: 'Versão', statusLabel: 'Estado', yes: 'Sim', no: 'Não', iconLabel: 'Ícone da aplicação', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esta aplicação?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Transferir esta aplicação?', updateApp: 'Atualizar app', updateTitle: 'Atualize a sua aplicação', updateVersionLabel: 'Versão da aplicação', updateFileLabel: 'Ficheiro index.html', updateCancel: 'Cancelar', updateSuccess: 'Aplicação atualizada na BlueStore.', downloadButton: 'Transferir', installed: 'Instalada ✓', notInstalled: 'Não instalada', fileError: 'Selecione um ficheiro com o nome index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'Aplicação publicada na BlueStore.', publishPending: 'A publicar…', publishAuthRequired: 'Inicie sessão para publicar a aplicação.', publishStorageError: 'O Firebase Storage não está ativo ou o bucket do projeto não foi configurado.', publishPermissionError: 'O Firebase recusou a publicação por falta de permissões no Storage ou no Firestore.', publishFailure: 'Não foi possível publicar. Verifique a ligação e tente novamente.', downloadSuccess: 'Ficheiro da aplicação transferido pelo navegador.', installStore: 'Instalar BlueStore', installApp: 'Adicionar ao ecrã principal', backToStore: '← Voltar à BlueStore', installHelpAndroid: 'No Android, use o botão de instalação ou o menu ⋮ do navegador e escolha “Instalar app” ou “Adicionar ao ecrã principal”.', installHelpIOS: 'No iPhone/iPad, abra no Safari, toque em Partilhar e escolha “Adicionar ao ecrã principal”.', appUnavailable: 'Esta aplicação não está disponível neste navegador. Volte à BlueStore e transfira-a novamente aqui.', storageError: 'Não foi possível guardar esta aplicação neste navegador.', emptyCatalog: 'Ainda não há aplicações adicionadas.' },
+      en: { title: 'BlueStore — App Store', menu: 'Menu', close: 'Close menu', languages: 'Languages', themes: 'Themes', light: 'Light', dark: 'Dark', search: 'Search apps...', featured: 'Featured', eyebrow: 'Discover something new', hero: 'The right apps for<br>your everyday life.', heroDescription: 'Explore amazing tools to work, learn, create, and have fun — all in one place.', popular: 'Popular apps', popularDescription: 'A selection to get you started.', categories: 'Categories', all: 'All', productivity: 'Productivity', design: 'Design', finance: 'Finance', entertainment: 'Entertainment', empty: 'No apps have been added yet.', bannerTitle: 'A simple and secure experience', bannerDescription: 'Discover your next favorite apps.', explore: 'Explore apps', footer: 'BlueStore · Your next discovery is one click away.', install: 'Install', added: 'Added ✓', accountSignIn: 'Sign in', accountSignOut: 'Sign out', signOutQuestion: 'Do you want to sign out?', loginRequiredText: 'Create an account to perform this action', googleLogin: 'Sign in with Google', googleDisabled: 'Enable the Google provider in Firebase Authentication > Sign-in method.', googlePopupBlocked: 'Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.', googlePopupClosed: 'Google sign-in was cancelled.', googleConflict: 'This email is already registered with another sign-in method. Sign in with that method first.', googleGeneric: 'Could not sign in with Google. Please try again.', authTitle: 'Sign in to BlueStore', emailLabel: 'Email', passwordLabel: 'Password', createAccount: 'Create account', authSignIn: 'Sign in', authCancel: 'Cancel', authGeneric: 'Could not sign in. Check your details and try again.', authBadEmail: 'Enter a valid email address.', authDomain: 'This domain is not authorized in Firebase. Host BlueStore over HTTPS and authorize the domain in Firebase Console.', authNetwork: 'Cannot connect to Firebase. Check your internet connection and try again.', authDisabled: 'Enable the Email/Password provider in Firebase Authentication.', authExists: 'This email is already registered.', authWeak: 'Password must be at least 6 characters.', authInvalid: 'Incorrect email or password.', authTooMany: 'Too many attempts. Try again later.', downloadLoadError: 'Could not load the app. Please try again.', downloadPreparing: 'Loading app...', firebaseError: 'Could not connect to Firebase. Check that the project services are enabled.', publishButton: 'Publish app', publishTitle: 'Publish app', closeDialog: 'Close', step1Title: 'App information', fileLabel: 'index.html file', nameLabel: 'App name', next: 'Next', step2Title: 'App details', versionLabel: 'Version', statusLabel: 'Status', yes: 'Yes', no: 'No', iconLabel: 'App icon', chooseImage: 'Choose image', noImageSelected: 'No image selected', packageLabel: 'Package name', packagePlaceholder: 'com.example.app', categoryLabel: 'Category', confirmPublish: 'Do you want to publish this app?', cancelQuestion: 'Do you want to cancel?', back: '← Back', ok: 'OK', downloadQuestion: 'Download this app?', updateApp: 'Update app', updateTitle: 'Update your app', updateVersionLabel: 'App version', updateFileLabel: 'index.html file', updateCancel: 'Cancel', updateSuccess: 'App updated in BlueStore.', downloadButton: 'Download', installed: 'Installed ✓', notInstalled: 'Not installed', fileError: 'Choose a file named index.html.', detailsError: 'Complete every field, including category, and choose an icon.', publishSuccess: 'App published to BlueStore.', publishPending: 'Publishing…', publishAuthRequired: 'Sign in to publish this app.', publishStorageError: 'Firebase Storage is disabled or the project bucket is not configured.', publishPermissionError: 'Firebase denied publishing because Storage or Firestore permissions are missing.', publishFailure: 'Could not publish. Check your connection and try again.', downloadSuccess: 'App file downloaded by the browser.', installStore: 'Install BlueStore', installApp: 'Add to Home Screen', backToStore: '← Back to BlueStore', installHelpAndroid: 'On Android, use the install button or the browser ⋮ menu and choose “Install app” or “Add to Home screen”.', installHelpIOS: 'On iPhone/iPad, open in Safari, tap Share, then choose “Add to Home Screen”.', appUnavailable: 'This app is not available in this browser. Return to BlueStore and download it again here.', storageError: 'This app could not be saved in this browser.', emptyCatalog: 'No apps have been added yet.' }
     };
     const STORAGE_KEY = 'appblue-state-v1';
     const FEATURED_CATALOG_VERSION = 'dictionary-codes-v2';
@@ -708,7 +734,7 @@
           }
           for (const featuredApp of FEATURED_LOCAL_APPS) {
             const current = savedApps.find(app => app.id === featuredApp.id);
-            store.put({ ...featuredApp, downloaded: Boolean(current?.downloaded), fileHandle: current?.fileHandle || null });
+            store.put({ ...featuredApp, downloaded: Boolean(current?.downloaded), fileHandle: current?.fileHandle || null, pwaLocalStorage: current?.pwaLocalStorage || {} });
           }
         };
         request.onerror = () => reject(request.error || new Error('Falha ao ler os apps locais'));
@@ -1207,7 +1233,8 @@
       closeDownloadConfirmation();
       if (!app) return;
       try {
-        await saveAppDownload(app); render(); showToast(translations[currentLanguage].downloadSuccess);
+        await saveAppDownload(app);
+        window.location.assign(buildPwaAppUrl(app.id));
       } catch (error) {
         if (error.name === 'AbortError') { render(); return; }
         app.downloaded = false; app.fileHandle = null;
@@ -1289,24 +1316,198 @@
     applyTheme(currentTheme);
     applyLanguage(currentLanguage);
     initializeFirebaseAuth();
-    loadPublishedApps();
-    const refreshDownloadStatus = async () => { if (await verifyCustomAppFiles()) render(); };
-    window.addEventListener('focus', refreshDownloadStatus);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDownloadStatus(); });
-    let deferredInstallPrompt = null;
+
+    const requestedPwaAppId = new URLSearchParams(window.location.search).get('bluestoreApp');
+    const webManifestLink = document.getElementById('webManifest');
     const installStoreButton = document.getElementById('installStoreButton');
+    const installSpecificAppButton = document.getElementById('installSpecificAppButton');
+    const pwaInstallHelp = document.getElementById('pwaInstallHelp');
+    const pwaAppShell = document.getElementById('pwaAppShell');
+    const pwaAppFrame = document.getElementById('pwaAppFrame');
+    const pwaAppError = document.getElementById('pwaAppError');
+    let deferredInstallPrompt = null;
+    let pwaActiveAppId = null;
+    let dynamicManifestUrl = null;
+    let pwaStorageSaveTimer = 0;
+    function buildPwaAppUrl(appId) {
+      const url = new URL('./', window.location.href);
+      url.searchParams.set('bluestoreApp', appId);
+      return url.href;
+    }
+    function isStandalonePwa() {
+      return Boolean(window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true);
+    }
+    function drawPwaIcon(source, appName, size) {
+      return new Promise(resolve => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const context = canvas.getContext('2d');
+        if (!context) { resolve(''); return; }
+        const fallback = () => {
+          context.fillStyle = '#1769e0'; context.fillRect(0, 0, size, size);
+          context.fillStyle = '#fff'; context.font = `700 ${Math.round(size * .48)}px system-ui, sans-serif`;
+          context.textAlign = 'center'; context.textBaseline = 'middle';
+          context.fillText((appName || 'B').trim().slice(0, 1).toUpperCase() || 'B', size / 2, size / 2);
+          try { resolve(canvas.toDataURL('image/png')); } catch (error) { resolve(''); }
+        };
+        context.fillStyle = '#fff'; context.fillRect(0, 0, size, size);
+        if (!source) { fallback(); return; }
+        const image = new Image();
+        image.onload = () => {
+          try {
+            const scale = Math.min(size / image.naturalWidth, size / image.naturalHeight);
+            const width = image.naturalWidth * scale, height = image.naturalHeight * scale;
+            context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (error) { fallback(); }
+        };
+        image.onerror = fallback;
+        image.src = source;
+      });
+    }
+    async function attachDynamicManifest(app) {
+      const name = app?.name || 'BlueStore';
+      const iconSource = app?.iconData || '';
+      const [icon192, icon512] = await Promise.all([
+        drawPwaIcon(iconSource, name, 192),
+        drawPwaIcon(iconSource, name, 512)
+      ]);
+      const baseUrl = new URL('./', window.location.href);
+      const startUrl = app ? new URL(buildPwaAppUrl(app.id)) : new URL('./', window.location.href);
+      const manifest = {
+        id: app ? `${baseUrl.pathname}?bluestoreApp=${encodeURIComponent(app.id)}` : baseUrl.pathname,
+        name,
+        short_name: name.slice(0, 12),
+        description: app ? `${name} — aplicativo da BlueStore` : 'BlueStore — loja de aplicativos',
+        start_url: startUrl.href,
+        scope: baseUrl.href,
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#1769e0',
+        icons: [
+          { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' }
+        ]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      if (dynamicManifestUrl) URL.revokeObjectURL(dynamicManifestUrl);
+      dynamicManifestUrl = URL.createObjectURL(manifestBlob);
+      webManifestLink.href = dynamicManifestUrl;
+      const favicon = document.getElementById('appFavicon');
+      const appleIcon = document.getElementById('appleTouchIcon');
+      if (icon192) { favicon.href = icon192; appleIcon.href = icon192; }
+      const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+      if (appleTitle) appleTitle.content = name.slice(0, 30);
+      document.title = app ? `${name} — BlueStore` : 'BlueStore — Loja de aplicativos';
+    }
+    function appStorageBridge(app) {
+      const initialValues = Object.create(null);
+      if (app.pwaLocalStorage && typeof app.pwaLocalStorage === 'object') {
+        for (const [key, value] of Object.entries(app.pwaLocalStorage)) initialValues[String(key)] = String(value);
+      }
+      const appIdJson = JSON.stringify(app.id);
+      const storageJson = JSON.stringify(initialValues).replace(/</g, '\\u003c');
+      const bridgeSource = `(()=>{const appId=${appIdJson};const data=JSON.parse(${JSON.stringify(storageJson)});const emit=()=>{try{parent.postMessage({__bluestorePwaStorage:true,appId,values:{...data}},'*')}catch(e){}};const api={get length(){return Object.keys(data).length},key(i){return Object.keys(data)[i]??null},getItem(k){k=String(k);return Object.prototype.hasOwnProperty.call(data,k)?data[k]:null},setItem(k,v){data[String(k)]=String(v);emit()},removeItem(k){delete data[String(k)];emit()},clear(){for(const k of Object.keys(data))delete data[k];emit()}};try{Object.defineProperty(window,'localStorage',{configurable:true,value:api})}catch(e){try{window.localStorage=api}catch(_){}}})();`;
+      const injected = '<script>' + bridgeSource + '</scr' + 'ipt>';
+      if (/<head\b[^>]*>/i.test(app.htmlContent)) return app.htmlContent.replace(/<head\b[^>]*>/i, match => match + injected);
+      if (/<html\b[^>]*>/i.test(app.htmlContent)) return app.htmlContent.replace(/<html\b[^>]*>/i, match => match + '<head>' + injected + '</head>');
+      return injected + app.htmlContent;
+    }
+    async function launchPwaApp(appId) {
+      const app = customApps.find(item => item.id === appId) || FEATURED_LOCAL_APPS.find(item => item.id === appId);
+      document.body.classList.add('pwa-app-mode');
+      pwaAppShell.hidden = false;
+      pwaAppFrame.hidden = true;
+      pwaAppError.hidden = true;
+      const t = translations[currentLanguage];
+      document.getElementById('pwaBackLink').textContent = t.backToStore;
+      document.getElementById('pwaBackLink').href = new URL('./', window.location.href).href;
+      if (!app || typeof app.htmlContent !== 'string' || !app.htmlContent) {
+        pwaAppError.textContent = t.appUnavailable;
+        pwaAppError.hidden = false;
+        installSpecificAppButton.hidden = true;
+        return;
+      }
+      pwaActiveAppId = app.id;
+      document.getElementById('pwaAppTitle').textContent = app.name;
+      const appIcon = document.getElementById('pwaAppIcon');
+      appIcon.src = app.iconData || '';
+      appIcon.alt = `${app.name} icon`;
+      await attachDynamicManifest(app);
+      pwaInstallHelp.textContent = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? t.installHelpIOS : t.installHelpAndroid;
+      pwaInstallHelp.hidden = isStandalonePwa();
+      installSpecificAppButton.textContent = t.installApp;
+      installSpecificAppButton.hidden = isStandalonePwa();
+      pwaAppFrame.title = app.name;
+      pwaAppFrame.srcdoc = appStorageBridge(app);
+      pwaAppFrame.hidden = false;
+    }
+    window.addEventListener('message', event => {
+      const payload = event.data;
+      if (event.source !== pwaAppFrame.contentWindow || !payload || payload.__bluestorePwaStorage !== true || payload.appId !== pwaActiveAppId || !payload.values || typeof payload.values !== 'object') return;
+      const app = customApps.find(item => item.id === pwaActiveAppId);
+      if (!app) return;
+      const values = Object.create(null);
+      for (const [key, value] of Object.entries(payload.values)) values[String(key)] = String(value);
+      try { if (JSON.stringify(values).length > 900000) return; } catch (error) { return; }
+      app.pwaLocalStorage = values;
+      clearTimeout(pwaStorageSaveTimer);
+      pwaStorageSaveTimer = window.setTimeout(() => savePublishedApp(app).catch(() => {}), 120);
+    });
     window.addEventListener('beforeinstallprompt', event => {
-      event.preventDefault(); deferredInstallPrompt = event; installStoreButton.hidden = false;
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      if (pwaActiveAppId) {
+        installSpecificAppButton.hidden = isStandalonePwa();
+        pwaInstallHelp.hidden = true;
+      } else {
+        installStoreButton.hidden = false;
+      }
     });
     installStoreButton.addEventListener('click', async () => {
       if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null; installStoreButton.hidden = true;
+      const promptEvent = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      await promptEvent.prompt();
+      await promptEvent.userChoice;
+      installStoreButton.hidden = true;
     });
-    window.addEventListener('appinstalled', () => { installStoreButton.hidden = true; deferredInstallPrompt = null; });
-    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    installSpecificAppButton.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) { pwaInstallHelp.hidden = false; return; }
+      const promptEvent = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
+      if (choice?.outcome === 'accepted') installSpecificAppButton.hidden = true;
+      else pwaInstallHelp.hidden = false;
+    });
+    window.addEventListener('appinstalled', () => {
+      installStoreButton.hidden = true;
+      installSpecificAppButton.hidden = true;
+      deferredInstallPrompt = null;
+      pwaInstallHelp.hidden = true;
+    });
+    async function registerPwaWorker() {
+      if (!('serviceWorker' in navigator) || !(location.protocol === 'https:' || location.hostname === 'localhost')) return;
+      try {
+        await navigator.serviceWorker.register('./sw.js', { scope: new URL('./', location.href).pathname });
+        await Promise.race([navigator.serviceWorker.ready, new Promise(resolve => setTimeout(resolve, 3500))]);
+      } catch (error) {}
     }
+    async function bootBlueStore() {
+      await registerPwaWorker();
+      if (requestedPwaAppId) {
+        await loadPublishedApps();
+        await launchPwaApp(requestedPwaAppId);
+      } else {
+        await attachDynamicManifest(null);
+        loadPublishedApps();
+      }
+    }
+    const refreshDownloadStatus = async () => { if (await verifyCustomAppFiles()) render(); };
+    window.addEventListener('focus', refreshDownloadStatus);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDownloadStatus(); });
+    bootBlueStore();
   </script>
 </body>
 </html>
