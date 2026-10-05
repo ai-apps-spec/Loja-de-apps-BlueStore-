@@ -1504,12 +1504,14 @@
       } catch (error) {}
     }
     async function bootBlueStore() {
-      await registerPwaWorker();
+      const workerReady = registerPwaWorker();
       if (requestedPwaAppId) {
+        await workerReady;
         await loadPublishedApps();
         await launchPwaApp(requestedPwaAppId);
       } else {
-        loadPublishedApps();
+        render();
+        await loadPublishedApps();
       }
     }
     const refreshDownloadStatus = async () => { if (await verifyCustomAppFiles()) render(); };
