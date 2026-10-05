@@ -32,7 +32,8 @@
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     button, input { font: inherit; }
-    button, a, label, select { cursor: pointer; }
+    body, body * { cursor: default; }
+    button, button *, a, a *, label, label *, select, select *, .custom-published-card, .custom-published-card * { cursor: pointer; }
     input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea { cursor: text; }
     button { cursor: pointer; }
     .topbar {
