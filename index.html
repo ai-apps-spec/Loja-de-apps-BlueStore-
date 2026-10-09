@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#1769e0" />
   <title>BlueStore — Loja de aplicativos</title>
-  <script src="./firebase-config.js"></script>
   <script>
     (() => {
       const appScope = new URL('./', location.href);
@@ -419,7 +418,13 @@
     let firebaseAuthServicesPromise = null;
     let authRequestPending = false;
     let downloadPreparationToken = 0;
-    const firebaseConfig = window.BLUE_STORE_FIREBASE_CONFIG;
+    const firebaseConfig = {
+      apiKey: 'AIzaSyDO1G01kUcyrtEMHkowMMkqQzNChqSkBRI',
+      authDomain: 'bluestore-d6578.firebaseapp.com',
+      projectId: 'bluestore-d6578',
+      messagingSenderId: '686018431404',
+      appId: '1:686018431404:web:8fb705fb28e7abaea71209'
+    };
     function getFirebaseAuthServices() {
       if (!firebaseAuthServicesPromise) firebaseAuthServicesPromise = (async () => {
         const [appSdk, authSdk] = await Promise.all([
