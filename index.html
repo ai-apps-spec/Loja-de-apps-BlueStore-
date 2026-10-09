@@ -750,7 +750,7 @@
     async function publishAppLocally(app) {
       if (!currentUser) throw new Error('Autenticação necessária');
       const localApp = { ...app, ownerUid: currentUser.uid, htmlUrl: null, htmlStoragePath: null, iconStoragePath: null, downloaded: false, fileHandle: null };
-      await savePublishedApp(localApp);
+      await BlueStoreAPI.catalog.save(localApp);
       return localApp;
     }
     async function updateAppLocally(app, version, htmlContent) {
@@ -772,7 +772,7 @@
         app.downloaded = fileExists;
         if (app.installed) delete app.installed;
         if (wasDownloaded !== app.downloaded || hadLegacyState) {
-          try { await savePublishedApp(app); } catch (error) {}
+          try { await BlueStoreAPI.catalog.save(app); } catch (error) {}
           changed = true;
         }
       }
@@ -782,11 +782,11 @@
       let savedApps = [];
       let storageFailed = false;
       try {
-        await syncFeaturedLocalApps();
-        savedApps = await readPublishedApps();
+        await BlueStoreAPI.catalog.syncFeatured();
+        savedApps = await BlueStoreAPI.catalog.list();
       } catch (error) {
         storageFailed = true;
-        try { savedApps = await readPublishedApps(); } catch (ignored) {}
+        try { savedApps = await BlueStoreAPI.catalog.list(); } catch (ignored) {}
       }
       const normalizeName = value => String(value || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
       const featuredIds = new Set(FEATURED_LOCAL_APPS.map(app => app.id));
@@ -804,8 +804,7 @@
     }
     async function initializeFirebaseAuth() {
       try {
-        const services = await getFirebaseAuthServices();
-        services.authSdk.onAuthStateChanged(services.auth, user => {
+        await BlueStoreAPI.auth.onStateChanged(user => {
           currentUser = user; updateAuthUi(); render();
         });
       } catch (error) { updateAuthUi(); }
@@ -892,8 +891,7 @@
     async function confirmSignOut() {
       signOutYesButton.disabled = true;
       try {
-        const services = await getFirebaseAuthServices();
-        await services.authSdk.signOut(services.auth);
+        await BlueStoreAPI.auth.signOut();
         currentUser = null; updateAuthUi(); render(); closeSignOutConfirmation();
       } catch (error) { showToast(translations[currentLanguage].firebaseError); }
       finally { signOutYesButton.disabled = false; }
@@ -958,11 +956,10 @@
       signInButton.disabled = true; createButton.disabled = true; authForm.setAttribute('aria-busy', 'true');
       authPassword.autocomplete = createAccount ? 'new-password' : 'current-password';
       try {
-        const services = await getFirebaseAuthServices();
         const email = authEmail.value.trim();
         const credential = createAccount
-          ? await services.authSdk.createUserWithEmailAndPassword(services.auth, email, authPassword.value)
-          : await services.authSdk.signInWithEmailAndPassword(services.auth, email, authPassword.value);
+          ? await BlueStoreAPI.auth.createAccount(email, authPassword.value)
+          : await BlueStoreAPI.auth.signInWithEmail(email, authPassword.value);
         currentUser = credential.user; updateAuthUi(); render();
         const shouldPublish = pendingPublishAfterAuth;
         closeAuthFlow();
@@ -987,10 +984,7 @@
       if (currentUser || authRequestPending) return;
       authRequestPending = true; triggerButton.disabled = true; triggerButton.setAttribute('aria-busy', 'true');
       try {
-        const services = await getFirebaseAuthServices();
-        const provider = new services.authSdk.GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-        const result = await services.authSdk.signInWithPopup(services.auth, provider);
+        const result = await BlueStoreAPI.auth.signInWithGoogle();
         const action = pendingProtectedAction; pendingProtectedAction = null;
         loginRequiredModal.hidden = true; loginRequiredError.textContent = ''; loginRequiredError.hidden = true; syncBackgroundInert();
         currentUser = result.user; updateAuthUi(); render(); setDrawer(false); continueProtectedAction(action);
@@ -1129,7 +1123,7 @@
       publishNoButton.disabled = true; publishCloseButton.disabled = true;
       try {
         const app = { id: `app-${Date.now()}-${Math.random().toString(16).slice(2)}`, name: pendingPublication.name, version: pendingPublication.version, packageName: pendingPublication.packageName, category: pendingPublication.category, iconData: pendingPublication.iconData, htmlContent: pendingPublication.htmlContent, downloaded: false };
-        const localApp = await publishAppLocally(app);
+        const localApp = await BlueStoreAPI.catalog.publishLocal(app);
         customApps.push(localApp);
         render(); closePublishFlow(); showToast(translations[currentLanguage].publishSuccess);
       } catch (error) {
@@ -1214,8 +1208,8 @@
       if (!app || !file || !version) return;
       if (file.name.toLowerCase() !== 'index.html') { error.textContent = translations[currentLanguage].fileError; return; }
       try {
-        const updatedApp = await updateAppLocally(app, version, await file.text());
-        await savePublishedApp(updatedApp);
+        const updatedApp = await BlueStoreAPI.catalog.updateLocal(app, version, await file.text());
+        await BlueStoreAPI.catalog.save(updatedApp);
         Object.assign(app, updatedApp); render(); closeUpdateFlow(); showToast(translations[currentLanguage].updateSuccess);
       } catch (updateError) { error.textContent = translations[currentLanguage].storageError; }
     });
@@ -1227,12 +1221,48 @@
       setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
     async function saveAppDownload(app) {
-      downloadAppFile(app);
+      BlueStoreAPI.downloads.file(app);
       app.downloaded = false;
       app.fileHandle = null;
-      await savePublishedApp(app);
+      await BlueStoreAPI.catalog.save(app);
       return true;
     }
+    const BlueStoreAPI = window.BlueStoreAPI = Object.freeze({
+      version: '1.0.0',
+      auth: Object.freeze({
+        getServices: getFirebaseAuthServices,
+        onStateChanged: async callback => {
+          const services = await getFirebaseAuthServices();
+          return services.authSdk.onAuthStateChanged(services.auth, callback);
+        },
+        createAccount: async (email, password) => {
+          const services = await getFirebaseAuthServices();
+          return services.authSdk.createUserWithEmailAndPassword(services.auth, email, password);
+        },
+        signInWithEmail: async (email, password) => {
+          const services = await getFirebaseAuthServices();
+          return services.authSdk.signInWithEmailAndPassword(services.auth, email, password);
+        },
+        signInWithGoogle: async () => {
+          const services = await getFirebaseAuthServices();
+          const provider = new services.authSdk.GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
+          return services.authSdk.signInWithPopup(services.auth, provider);
+        },
+        signOut: async () => {
+          const services = await getFirebaseAuthServices();
+          return services.authSdk.signOut(services.auth);
+        }
+      }),
+      catalog: Object.freeze({
+        list: readPublishedApps,
+        save: savePublishedApp,
+        syncFeatured: syncFeaturedLocalApps,
+        publishLocal: publishAppLocally,
+        updateLocal: updateAppLocally
+      }),
+      downloads: Object.freeze({ file: downloadAppFile, save: saveAppDownload })
+    });
     document.getElementById('downloadYes').addEventListener('click', async () => {
       if (!currentUser) {
         const appId = selectedDownloadAppId; closeDownloadConfirmation();
@@ -1242,11 +1272,11 @@
       closeDownloadConfirmation();
       if (!app) return;
       try {
-        await saveAppDownload(app);
+        await BlueStoreAPI.downloads.save(app);
       } catch (error) {
         if (error.name === 'AbortError') { render(); return; }
         app.downloaded = false; app.fileHandle = null;
-        try { await savePublishedApp(app); } catch (saveError) {}
+        try { await BlueStoreAPI.catalog.save(app); } catch (saveError) {}
         render(); showToast(translations[currentLanguage].storageError);
       }
     });
