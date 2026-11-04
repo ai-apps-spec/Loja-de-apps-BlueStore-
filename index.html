@@ -41,7 +41,7 @@
     button, input { font: inherit; }
     body, body * { cursor: default; }
     button, button *, a, a *, label, label *, select, select *, .custom-published-card, .custom-published-card * { cursor: pointer; }
-    input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea { cursor: text; }
+    input[type="text"], input[type="search"], input[type="url"], input[type="number"], textarea { cursor: text; }
     button { cursor: pointer; }
     .topbar {
       height: 76px;
@@ -71,27 +71,6 @@
     .drawer-backdrop { position: fixed; inset: 0; z-index: 9; border: 0; background: rgba(13, 31, 56, .34); opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s; }
     .drawer-backdrop.visible { opacity: 1; visibility: visible; }
     .side-drawer { position: fixed; z-index: 10; inset: 0 0 0 auto; display: flex; flex-direction: column; overflow-y: auto; width: 50vw; max-width: 720px; min-width: 320px; padding: 30px; background: white; box-shadow: -16px 0 40px rgba(20, 50, 90, .16); transform: translateX(105%); transition: transform .28s ease; }
-    .drawer-account-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: auto; }
-    .drawer-account-button { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; }
-    .account-login-icon { display: block; width: 16px; height: 16px; flex: 0 0 16px; }
-    .account-login-icon[hidden] { display: none; }
-    .account-email-control { position: relative; align-self: flex-start; }
-    .account-email-button { max-width: min(300px, calc(50vw - 60px)); }
-    .account-email-button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .account-email-control[hidden] { display: none; }
-    .account-popover { position: absolute; z-index: 12; bottom: calc(100% + 8px); left: 0; min-width: 100px; padding: 8px; border: 1px solid var(--line); border-radius: 11px; background: var(--white); box-shadow: 0 10px 28px rgba(20, 50, 90, .18); }
-    .account-popover[hidden] { display: none; }
-    .account-popover .dialog-button { width: 100%; }
-    .signout-dialog { width: min(390px, 100%); text-align: center; }
-    .signout-dialog h3 { margin: 8px 0 26px; font-size: 19px; }
-    .login-required-dialog { display: flex; flex-direction: column; width: min(460px, 100%); min-height: 190px; }
-    .login-required-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-    .login-required-heading p { margin: 7px 0 0; text-align: left; font-size: 16px; font-weight: 750; }
-    .login-required-error { margin-top: 14px; }
-    .login-required-actions { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 24px; }
-    .account-email-button { display: inline-flex; align-items: center; gap: 9px; border: 1px solid #d4dce8; border-radius: 10px; padding: 9px 14px; background: #fff; color: #26364b; font: inherit; font-size: 12px; font-weight: 750; white-space: nowrap; cursor: pointer; }
-    .account-email-button:hover { background: #f5f8fc; }
-    .account-email-button[hidden] { display: none; }
     .side-drawer.open { transform: translateX(0); }
     .drawer-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
     .drawer-header h2 { margin: 0; font-size: 21px; }
@@ -160,9 +139,6 @@
     body.dark-theme .empty { background: var(--white); }
     body.dark-theme .install.installed { background: #29384b; color: #c4d1e2; }
     body.dark-theme .drawer-close { background: #203d63; color: #b8d5ff; }
-    body.dark-theme .account-email-button { border-color: #34465d; background: #172438; color: var(--ink); }
-    body.dark-theme .account-email-button:hover { background: #203d63; }
-    body.dark-theme .account-popover { border-color: #34465d; background: #1b2a3d; }
     body.dark-theme .language-option { background: #172438; color: #c4d1e2; }
     body.dark-theme .language-option:hover, body.dark-theme .language-option.selected { border-color: #557fb6; background: #203d63; color: #c2dcff; }
     .banner-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
@@ -269,13 +245,6 @@
       <button class="language-option theme-option" id="lightThemeOption" type="button" data-theme="light">Claro</button>
       <button class="language-option theme-option" id="darkThemeOption" type="button" data-theme="dark">Escuro</button>
     </div>
-    <div class="drawer-account-actions">
-      <div class="account-email-control" id="accountEmailControl" hidden>
-        <button class="account-email-button" id="accountEmailButton" type="button" aria-expanded="false" aria-controls="accountPopover"><span id="accountEmailText"></span></button>
-        <div class="account-popover" id="accountPopover" hidden><button class="dialog-button danger" id="signOutPromptButton" type="button">Sair</button></div>
-      </div>
-      <button class="explore publish-button drawer-account-button" id="accountButton" type="button"><svg class="account-login-icon" id="accountLoginIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5M10 8l4 4-4 4M14 12H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="accountButtonLabel">Login/entrar</span></button>
-    </div>
   </aside>
   <div class="modal-backdrop" id="publishModal" hidden>
     <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
@@ -326,30 +295,6 @@
         <p class="validation-message" id="updateError" aria-live="polite"></p>
         <div class="dialog-actions"><button class="dialog-button" id="updateCancel" type="button">Cancelar</button><button class="dialog-button primary" id="updateSubmit" type="submit">Atualizar app</button></div>
       </form>
-    </section>
-  </div>
-  <div class="modal-backdrop" id="authModal" hidden>
-    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-      <div class="dialog-header"><h2 id="authTitle">Conta local da BlueStore</h2><button class="dialog-close" id="authClose" type="button" aria-label="Fechar">×</button></div>
-      <form id="authForm">
-        <label class="form-field"><span id="authEmailLabel">E-mail</span><input id="authEmail" type="email" autocomplete="username" required></label>
-        <label class="form-field"><span id="authPasswordLabel">Senha</span><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></label>
-        <p class="validation-message" id="authError" aria-live="polite"></p>
-        <div class="dialog-actions"><button class="dialog-button" id="authCancel" type="button">Cancelar</button><button class="dialog-button" id="authCreate" type="button">Criar conta</button><button class="dialog-button primary" id="authSignIn" type="submit">Entrar</button></div>
-      </form>
-    </section>
-  </div>
-  <div class="modal-backdrop" id="signOutModal" hidden>
-    <section class="dialog signout-dialog" role="dialog" aria-modal="true" aria-labelledby="signOutQuestionText">
-      <h3 id="signOutQuestionText">Deseja sair da conta?</h3>
-      <div class="dialog-actions"><button class="dialog-button" id="signOutNoButton" type="button">Não</button><button class="dialog-button primary" id="signOutYesButton" type="button">Sim</button></div>
-    </section>
-  </div>
-  <div class="modal-backdrop" id="loginRequiredModal" hidden>
-    <section class="dialog login-required-dialog" role="dialog" aria-modal="true" aria-labelledby="loginRequiredText">
-      <div class="login-required-heading"><p id="loginRequiredText">Cadastra-se para realizar a ação</p><button class="dialog-close" id="loginRequiredClose" type="button" aria-label="Fechar">×</button></div>
-      <p class="validation-message login-required-error" id="loginRequiredError" aria-live="polite" hidden></p>
-      <div class="login-required-actions"><button class="dialog-button primary" id="loginRequiredEmailButton" type="button" data-i18n="authSignIn">Entrar</button></div>
     </section>
   </div>
   <div class="modal-backdrop" id="appDetailsModal" hidden>
@@ -409,66 +354,8 @@
     let selectedDownloadAppId = null;
     let selectedCustomAppId = null;
     let selectedUpdateAppId = null;
-    let currentUser = null;
-    let pendingPublishAfterAuth = false;
-    let pendingProtectedAction = null;
     let publishRequestPending = false;
-    let authRequestPending = false;
-    const LOCAL_USERS_KEY = 'bluestore-local-users-v1';
-    const LOCAL_SESSION_KEY = 'bluestore-local-session-v1';
-    function getLocalUsers() {
-      try {
-        const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '[]');
-        return Array.isArray(users) ? users : [];
-      } catch (error) { return []; }
-    }
-    function localAuthError(code) {
-      const error = new Error(code);
-      error.code = code;
-      return error;
-    }
-    async function hashLocalPassword(password, salt) {
-      if (!globalThis.crypto?.subtle) throw localAuthError('auth/local-auth-unavailable');
-      const encoder = new TextEncoder();
-      const material = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-      const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: encoder.encode(salt), iterations: 120000, hash: 'SHA-256' }, material, 256);
-      return [...new Uint8Array(bits)].map(value => value.toString(16).padStart(2, '0')).join('');
-    }
-    const localAuth = Object.freeze({
-      currentUser: () => currentUser,
-      onStateChanged: callback => { queueMicrotask(() => callback(currentUser)); return () => {}; },
-      createAccount: async (email, password) => {
-        const normalizedEmail = String(email || '').trim().toLocaleLowerCase('en-US');
-        if (!normalizedEmail) throw localAuthError('auth/invalid-email');
-        if (getLocalUsers().some(user => user.email === normalizedEmail)) throw localAuthError('auth/email-already-in-use');
-        if (String(password).length < 6) throw localAuthError('auth/weak-password');
-        const salt = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-        const user = { uid: crypto.randomUUID ? crypto.randomUUID() : `local-${Date.now()}-${Math.random().toString(16).slice(2)}`, email: normalizedEmail };
-        const record = { ...user, salt, passwordHash: await hashLocalPassword(password, salt) };
-        const users = getLocalUsers(); users.push(record);
-        try { localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users)); }
-        catch (error) { throw localAuthError('auth/local-storage-unavailable'); }
-        currentUser = user;
-        try { localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(user)); } catch (error) {}
-        return { user };
-      },
-      signInWithEmail: async (email, password) => {
-        const normalizedEmail = String(email || '').trim().toLocaleLowerCase('en-US');
-        const record = getLocalUsers().find(user => user.email === normalizedEmail);
-        if (!record || await hashLocalPassword(password, record.salt) !== record.passwordHash) throw localAuthError('auth/invalid-credential');
-        currentUser = { uid: record.uid, email: record.email };
-        try { localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(currentUser)); } catch (error) {}
-        return { user: currentUser };
-      },
-      signOut: async () => {
-        currentUser = null;
-        try { localStorage.removeItem(LOCAL_SESSION_KEY); } catch (error) {}
-      }
-    });
-    try {
-      const session = JSON.parse(localStorage.getItem(LOCAL_SESSION_KEY) || 'null');
-      if (session && typeof session.uid === 'string' && typeof session.email === 'string' && getLocalUsers().some(user => user.uid === session.uid && user.email === session.email)) currentUser = session;
-    } catch (error) { currentUser = null; }
+    let downloadPreparationToken = 0;
     const grid = document.getElementById('appGrid');
     const search = document.getElementById('search');
     const searchMarquee = document.getElementById('searchMarquee');
@@ -476,9 +363,9 @@
     const searchMarqueeText = document.getElementById('searchMarqueeText');
     const searchMarqueeCopy = document.getElementById('searchMarqueeCopy');
     const translations = {
-      'pt-BR': { title: 'BlueStore — Loja de aplicativos', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Buscar aplicativos...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'Os apps certos para<br>o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e se divertir — tudo em um só lugar.', popular: 'Aplicativos populares', popularDescription: 'Uma seleção para você começar a explorar.', categories: 'Categorias', all: 'Todos', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Nenhum aplicativo cadastrado ainda.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra seus próximos aplicativos favoritos.', explore: 'Explorar apps', footer: 'BlueStore · Sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionado ✓', accountSignIn: 'Login/entrar', accountSignOut: 'Sair', signOutQuestion: 'Deseja sair da conta?', loginRequiredText: 'Crie uma conta local para realizar a ação', authTitle: 'Conta local da BlueStore', emailLabel: 'E-mail', passwordLabel: 'Senha', createAccount: 'Criar conta', authSignIn: 'Entrar', authCancel: 'Cancelar', authGeneric: 'Não foi possível entrar. Confira os dados e tente novamente.', authBadEmail: 'Digite um endereço de e-mail válido.', authExists: 'Este e-mail já está cadastrado.', authWeak: 'A senha precisa ter pelo menos 6 caracteres.', authInvalid: 'E-mail ou senha incorretos.', authTooMany: 'Muitas tentativas. Tente novamente mais tarde.', downloadLoadError: 'Não foi possível carregar o app. Tente novamente.', downloadPreparing: 'Carregando app...', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados do aplicativo', fileLabel: 'Arquivo index.html', nameLabel: 'Nome do app', next: 'Próximo', step2Title: 'Detalhes do aplicativo', versionLabel: 'Versão', statusLabel: 'Status', yes: 'Sim', no: 'Não', iconLabel: 'Ícone do app', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esse app?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Baixar esse app?', updateApp: 'Atualizar app', updateTitle: 'Atualize seu app', updateVersionLabel: 'Versão do app', updateFileLabel: 'Arquivo index.html', updateCancel: 'Cancelar', updateSuccess: 'App atualizado na BlueStore.', downloadButton: 'Download', installed: 'Instalado ✓', notInstalled: 'Não instalado', fileError: 'Selecione um arquivo chamado index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'App publicado na BlueStore.', publishPending: 'Publicando…', publishAuthRequired: 'Crie uma conta local para publicar o app.', publishFailure: 'Não foi possível publicar. Tente novamente.', downloadSuccess: 'Arquivo do app baixado pelo navegador.',storageError: 'Não foi possível salvar este app neste navegador.', emptyCatalog: 'Nenhum aplicativo cadastrado ainda.' },
-      'pt-PT': { title: 'BlueStore — Loja de aplicações', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Pesquisar aplicações...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'As aplicações certas<br>para o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e divertir-se — tudo num só lugar.', popular: 'Aplicações populares', popularDescription: 'Uma seleção para começar a explorar.', categories: 'Categorias', all: 'Todas', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Ainda não há aplicações adicionadas.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra as suas próximas aplicações favoritas.', explore: 'Explorar aplicações', footer: 'BlueStore · A sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionada ✓', accountSignIn: 'Login/entrar', accountSignOut: 'Sair', signOutQuestion: 'Pretende sair da conta?', loginRequiredText: 'Crie uma conta local para realizar esta ação', authTitle: 'Conta local da BlueStore', emailLabel: 'E-mail', passwordLabel: 'Palavra-passe', createAccount: 'Criar conta', authSignIn: 'Entrar', authCancel: 'Cancelar', authGeneric: 'Não foi possível iniciar sessão. Confira os dados e tente novamente.', authBadEmail: 'Introduza um endereço de e-mail válido.', authExists: 'Este e-mail já está registado.', authWeak: 'A palavra-passe deve ter pelo menos 6 caracteres.', authInvalid: 'E-mail ou palavra-passe incorretos.', authTooMany: 'Demasiadas tentativas. Tente novamente mais tarde.', downloadLoadError: 'Não foi possível carregar a aplicação. Tente novamente.', downloadPreparing: 'A carregar a aplicação...', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados da aplicação', fileLabel: 'Ficheiro index.html', nameLabel: 'Nome da aplicação', next: 'Seguinte', step2Title: 'Detalhes da aplicação', versionLabel: 'Versão', statusLabel: 'Estado', yes: 'Sim', no: 'Não', iconLabel: 'Ícone da aplicação', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esta aplicação?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Transferir esta aplicação?', updateApp: 'Atualizar app', updateTitle: 'Atualize a sua aplicação', updateVersionLabel: 'Versão da aplicação', updateFileLabel: 'Ficheiro index.html', updateCancel: 'Cancelar', updateSuccess: 'Aplicação atualizada na BlueStore.', downloadButton: 'Transferir', installed: 'Instalada ✓', notInstalled: 'Não instalada', fileError: 'Selecione um ficheiro com o nome index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'Aplicação publicada na BlueStore.', publishPending: 'A publicar…', publishAuthRequired: 'Crie uma conta local para publicar a aplicação.', publishFailure: 'Não foi possível publicar. Tente novamente.', downloadSuccess: 'Ficheiro da aplicação transferido pelo navegador.',storageError: 'Não foi possível guardar esta aplicação neste navegador.', emptyCatalog: 'Ainda não há aplicações adicionadas.' },
-      en: { title: 'BlueStore — App Store', menu: 'Menu', close: 'Close menu', languages: 'Languages', themes: 'Themes', light: 'Light', dark: 'Dark', search: 'Search apps...', featured: 'Featured', eyebrow: 'Discover something new', hero: 'The right apps for<br>your everyday life.', heroDescription: 'Explore amazing tools to work, learn, create, and have fun — all in one place.', popular: 'Popular apps', popularDescription: 'A selection to get you started.', categories: 'Categories', all: 'All', productivity: 'Productivity', design: 'Design', finance: 'Finance', entertainment: 'Entertainment', empty: 'No apps have been added yet.', bannerTitle: 'A simple and secure experience', bannerDescription: 'Discover your next favorite apps.', explore: 'Explore apps', footer: 'BlueStore · Your next discovery is one click away.', install: 'Install', added: 'Added ✓', accountSignIn: 'Sign in', accountSignOut: 'Sign out', signOutQuestion: 'Do you want to sign out?', loginRequiredText: 'Create a local account to perform this action', authTitle: 'BlueStore local account', emailLabel: 'Email', passwordLabel: 'Password', createAccount: 'Create account', authSignIn: 'Sign in', authCancel: 'Cancel', authGeneric: 'Could not sign in. Check your details and try again.', authBadEmail: 'Enter a valid email address.', authExists: 'This email is already registered.', authWeak: 'Password must be at least 6 characters.', authInvalid: 'Incorrect email or password.', authTooMany: 'Too many attempts. Try again later.', downloadLoadError: 'Could not load the app. Please try again.', downloadPreparing: 'Loading app...', publishButton: 'Publish app', publishTitle: 'Publish app', closeDialog: 'Close', step1Title: 'App information', fileLabel: 'index.html file', nameLabel: 'App name', next: 'Next', step2Title: 'App details', versionLabel: 'Version', statusLabel: 'Status', yes: 'Yes', no: 'No', iconLabel: 'App icon', chooseImage: 'Choose image', noImageSelected: 'No image selected', packageLabel: 'Package name', packagePlaceholder: 'com.example.app', categoryLabel: 'Category', confirmPublish: 'Do you want to publish this app?', cancelQuestion: 'Do you want to cancel?', back: '← Back', ok: 'OK', downloadQuestion: 'Download this app?', updateApp: 'Update app', updateTitle: 'Update your app', updateVersionLabel: 'App version', updateFileLabel: 'index.html file', updateCancel: 'Cancel', updateSuccess: 'App updated in BlueStore.', downloadButton: 'Download', installed: 'Installed ✓', notInstalled: 'Not installed', fileError: 'Choose a file named index.html.', detailsError: 'Complete every field, including category, and choose an icon.', publishSuccess: 'App published to BlueStore.', publishPending: 'Publishing…', publishAuthRequired: 'Create a local account to publish this app.', publishFailure: 'Could not publish. Please try again.', downloadSuccess: 'App file downloaded by the browser.',storageError: 'This app could not be saved in this browser.', emptyCatalog: 'No apps have been added yet.' }
+      'pt-BR': { title: 'BlueStore — Loja de aplicativos', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Buscar aplicativos...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'Os apps certos para<br>o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e se divertir — tudo em um só lugar.', popular: 'Aplicativos populares', popularDescription: 'Uma seleção para você começar a explorar.', categories: 'Categorias', all: 'Todos', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Nenhum aplicativo cadastrado ainda.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra seus próximos aplicativos favoritos.', explore: 'Explorar apps', footer: 'BlueStore · Sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionado ✓', downloadLoadError: 'Não foi possível carregar o app. Tente novamente.', downloadPreparing: 'Carregando app...', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados do aplicativo', fileLabel: 'Arquivo index.html', nameLabel: 'Nome do app', next: 'Próximo', step2Title: 'Detalhes do aplicativo', versionLabel: 'Versão', statusLabel: 'Status', yes: 'Sim', no: 'Não', iconLabel: 'Ícone do app', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esse app?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Baixar esse app?', updateApp: 'Atualizar app', updateTitle: 'Atualize seu app', updateVersionLabel: 'Versão do app', updateFileLabel: 'Arquivo index.html', updateCancel: 'Cancelar', updateSuccess: 'App atualizado na BlueStore.', downloadButton: 'Download', installed: 'Instalado ✓', notInstalled: 'Não instalado', fileError: 'Selecione um arquivo chamado index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'App publicado na BlueStore.', publishPending: 'Publicando…', publishFailure: 'Não foi possível publicar. Tente novamente.', downloadSuccess: 'Arquivo do app baixado pelo navegador.',storageError: 'Não foi possível salvar este app neste navegador.', emptyCatalog: 'Nenhum aplicativo cadastrado ainda.' },
+      'pt-PT': { title: 'BlueStore — Loja de aplicações', menu: 'Menu', close: 'Fechar menu', languages: 'Idiomas', themes: 'Temas', light: 'Claro', dark: 'Escuro', search: 'Pesquisar aplicações...', featured: 'Destaque', eyebrow: 'Descubra algo novo', hero: 'As aplicações certas<br>para o seu dia a dia.', heroDescription: 'Explore ferramentas incríveis para trabalhar, aprender, criar e divertir-se — tudo num só lugar.', popular: 'Aplicações populares', popularDescription: 'Uma seleção para começar a explorar.', categories: 'Categorias', all: 'Todas', productivity: 'Produtividade', design: 'Design', finance: 'Finanças', entertainment: 'Entretenimento', empty: 'Ainda não há aplicações adicionadas.', bannerTitle: 'Uma experiência simples e segura', bannerDescription: 'Descubra as suas próximas aplicações favoritas.', explore: 'Explorar aplicações', footer: 'BlueStore · A sua próxima descoberta está a um clique.', install: 'Instalar', added: 'Adicionada ✓', downloadLoadError: 'Não foi possível carregar a aplicação. Tente novamente.', downloadPreparing: 'A carregar a aplicação...', publishButton: 'Publicar app', publishTitle: 'Publicar app', closeDialog: 'Fechar', step1Title: 'Dados da aplicação', fileLabel: 'Ficheiro index.html', nameLabel: 'Nome da aplicação', next: 'Seguinte', step2Title: 'Detalhes da aplicação', versionLabel: 'Versão', statusLabel: 'Estado', yes: 'Sim', no: 'Não', iconLabel: 'Ícone da aplicação', chooseImage: 'Escolher imagem', noImageSelected: 'Nenhuma imagem selecionada', packageLabel: 'Nome do pacote', packagePlaceholder: 'com.exemplo.app', categoryLabel: 'Categoria', confirmPublish: 'Deseja publicar esta aplicação?', cancelQuestion: 'Deseja cancelar?', back: '← Voltar', ok: 'Ok', downloadQuestion: 'Transferir esta aplicação?', updateApp: 'Atualizar app', updateTitle: 'Atualize a sua aplicação', updateVersionLabel: 'Versão da aplicação', updateFileLabel: 'Ficheiro index.html', updateCancel: 'Cancelar', updateSuccess: 'Aplicação atualizada na BlueStore.', downloadButton: 'Transferir', installed: 'Instalada ✓', notInstalled: 'Não instalada', fileError: 'Selecione um ficheiro com o nome index.html.', detailsError: 'Preencha todos os campos, incluindo a categoria, e escolha um ícone.', publishSuccess: 'Aplicação publicada na BlueStore.', publishPending: 'A publicar…', publishFailure: 'Não foi possível publicar. Tente novamente.', downloadSuccess: 'Ficheiro da aplicação transferido pelo navegador.',storageError: 'Não foi possível guardar esta aplicação neste navegador.', emptyCatalog: 'Ainda não há aplicações adicionadas.' },
+      en: { title: 'BlueStore — App Store', menu: 'Menu', close: 'Close menu', languages: 'Languages', themes: 'Themes', light: 'Light', dark: 'Dark', search: 'Search apps...', featured: 'Featured', eyebrow: 'Discover something new', hero: 'The right apps for<br>your everyday life.', heroDescription: 'Explore amazing tools to work, learn, create, and have fun — all in one place.', popular: 'Popular apps', popularDescription: 'A selection to get you started.', categories: 'Categories', all: 'All', productivity: 'Productivity', design: 'Design', finance: 'Finance', entertainment: 'Entertainment', empty: 'No apps have been added yet.', bannerTitle: 'A simple and secure experience', bannerDescription: 'Discover your next favorite apps.', explore: 'Explore apps', footer: 'BlueStore · Your next discovery is one click away.', install: 'Install', added: 'Added ✓', downloadLoadError: 'Could not load the app. Please try again.', downloadPreparing: 'Loading app...', publishButton: 'Publish app', publishTitle: 'Publish app', closeDialog: 'Close', step1Title: 'App information', fileLabel: 'index.html file', nameLabel: 'App name', next: 'Next', step2Title: 'App details', versionLabel: 'Version', statusLabel: 'Status', yes: 'Yes', no: 'No', iconLabel: 'App icon', chooseImage: 'Choose image', noImageSelected: 'No image selected', packageLabel: 'Package name', packagePlaceholder: 'com.example.app', categoryLabel: 'Category', confirmPublish: 'Do you want to publish this app?', cancelQuestion: 'Do you want to cancel?', back: '← Back', ok: 'OK', downloadQuestion: 'Download this app?', updateApp: 'Update app', updateTitle: 'Update your app', updateVersionLabel: 'App version', updateFileLabel: 'index.html file', updateCancel: 'Cancel', updateSuccess: 'App updated in BlueStore.', downloadButton: 'Download', installed: 'Installed ✓', notInstalled: 'Not installed', fileError: 'Choose a file named index.html.', detailsError: 'Complete every field, including category, and choose an icon.', publishSuccess: 'App published to BlueStore.', publishPending: 'Publishing…', publishFailure: 'Could not publish. Please try again.', downloadSuccess: 'App file downloaded by the browser.',storageError: 'This app could not be saved in this browser.', emptyCatalog: 'No apps have been added yet.' }
     };
     const STORAGE_KEY = 'appblue-state-v1';
     const FEATURED_CATALOG_VERSION = 'dictionary-codes-v2';
@@ -589,12 +476,10 @@
       document.getElementById('bannerDescription').textContent = t.bannerDescription;
       document.getElementById('exploreLink').textContent = t.explore;
       document.getElementById('footerText').textContent = t.footer;
-      const localizedElements = { dialogTitle: 'publishTitle', step1Title: 'step1Title', fileLabel: 'fileLabel', appNameLabel: 'nameLabel', step1Next: 'next', step2Title: 'step2Title', versionLabel: 'versionLabel', iconLabel: 'iconLabel', iconFileButton: 'chooseImage', packageLabel: 'packageLabel', categoryLabel: 'categoryLabel', step2Next: 'next', confirmPublishText: 'confirmPublish', publishNo: 'no', publishYes: 'yes', cancelBack: 'back', cancelQuestion: 'cancelQuestion', cancelOk: 'ok', downloadQuestion: 'downloadQuestion', downloadNo: 'no', downloadYes: 'yes', updateTitle: 'updateTitle', updateVersionLabel: 'updateVersionLabel', updateFileLabel: 'updateFileLabel', updateCancel: 'updateCancel', updateSubmit: 'updateApp', appDetailsVersionLabel: 'versionLabel', appDetailsPackageLabel: 'packageLabel', appDetailsCategoryLabel: 'categoryLabel', appDetailsStatusLabel: 'statusLabel', appDetailsUpdateButton: 'updateApp', appDetailsDownloadButton: 'downloadButton', authTitle: 'authTitle', authEmailLabel: 'emailLabel', authPasswordLabel: 'passwordLabel', authCancel: 'authCancel', authCreate: 'createAccount', authSignIn: 'authSignIn', signOutPromptButton: 'accountSignOut', signOutQuestionText: 'signOutQuestion', signOutNoButton: 'no', signOutYesButton: 'yes', loginRequiredText: 'loginRequiredText' };
+      const localizedElements = { dialogTitle: 'publishTitle', step1Title: 'step1Title', fileLabel: 'fileLabel', appNameLabel: 'nameLabel', step1Next: 'next', step2Title: 'step2Title', versionLabel: 'versionLabel', iconLabel: 'iconLabel', iconFileButton: 'chooseImage', packageLabel: 'packageLabel', categoryLabel: 'categoryLabel', step2Next: 'next', confirmPublishText: 'confirmPublish', publishNo: 'no', publishYes: 'yes', cancelBack: 'back', cancelQuestion: 'cancelQuestion', cancelOk: 'ok', downloadQuestion: 'downloadQuestion', downloadNo: 'no', downloadYes: 'yes', updateTitle: 'updateTitle', updateVersionLabel: 'updateVersionLabel', updateFileLabel: 'updateFileLabel', updateCancel: 'updateCancel', updateSubmit: 'updateApp', appDetailsVersionLabel: 'versionLabel', appDetailsPackageLabel: 'packageLabel', appDetailsCategoryLabel: 'categoryLabel', appDetailsStatusLabel: 'statusLabel', appDetailsUpdateButton: 'updateApp', appDetailsDownloadButton: 'downloadButton' };
       Object.entries(localizedElements).forEach(([id, key]) => { const element = document.getElementById(id); if (element) element.textContent = t[key]; });
       document.getElementById('publishClose').setAttribute('aria-label', t.closeDialog);
       document.getElementById('updateClose').setAttribute('aria-label', t.closeDialog);
-      document.getElementById('authClose').setAttribute('aria-label', t.closeDialog);
-      document.getElementById('loginRequiredClose').setAttribute('aria-label', t.closeDialog);
       document.getElementById('appDetailsClose').setAttribute('aria-label', t.closeDialog);
       updateAuthUi();
       document.getElementById('packageInput').placeholder = t.packagePlaceholder;
@@ -669,7 +554,7 @@
       document.getElementById('appDetailsCategory').textContent = app.category || '—';
       document.getElementById('appDetailsStatus').textContent = app.downloaded ? t.installed : t.notInstalled;
       const updateButton = document.getElementById('appDetailsUpdateButton');
-      updateButton.hidden = !(currentUser && app.ownerUid === currentUser.uid);
+      updateButton.hidden = FEATURED_LOCAL_APPS.some(featuredApp => featuredApp.id === app.id);
       document.getElementById('appDetailsDownloadButton').setAttribute('aria-label', `${t.downloadButton} ${app.name}`);
       appDetailsModal.classList.remove('is-opening');
       appDetailsModal.hidden = false;
@@ -781,13 +666,12 @@
       });
     }
     async function publishAppLocally(app) {
-      if (!currentUser) throw new Error('Conta local necessária');
-      const localApp = { ...app, ownerUid: currentUser.uid, htmlUrl: null, htmlStoragePath: null, iconStoragePath: null, downloaded: false, fileHandle: null };
+      const localApp = { ...app, htmlUrl: null, htmlStoragePath: null, iconStoragePath: null, downloaded: false, fileHandle: null };
       await BlueStoreAPI.catalog.save(localApp);
       return localApp;
     }
     async function updateAppLocally(app, version, htmlContent) {
-      if (!currentUser || app.ownerUid !== currentUser.uid) throw new Error('Você não pode atualizar este app');
+      if (!app) throw new Error('Aplicativo não encontrado');
       return { ...app, version, htmlContent, htmlUrl: null, htmlStoragePath: null, downloaded: false, fileHandle: null };
     }
     async function verifyCustomAppFiles() {
@@ -835,9 +719,6 @@
       try { await verifyCustomAppFiles(); } catch (ignored) {}
       render();
     }
-    function initializeLocalAuth() {
-      localAuth.onStateChanged(user => { currentUser = user; updateAuthUi(); render(); });
-    }
     let toastTimer;
     function showToast(message) {
       const toast = document.getElementById('toast');
@@ -862,133 +743,16 @@
     const updateForm = document.getElementById('updateForm');
     const updateVersionInput = document.getElementById('updateVersionInput');
     const updateFileInput = document.getElementById('updateFileInput');
-    const authModal = document.getElementById('authModal');
-    const authForm = document.getElementById('authForm');
-    const authEmail = document.getElementById('authEmail');
-    const authPassword = document.getElementById('authPassword');
-    const accountButton = document.getElementById('accountButton');
-    const accountEmailControl = document.getElementById('accountEmailControl');
-    const accountEmailButton = document.getElementById('accountEmailButton');
-    const accountEmailText = document.getElementById('accountEmailText');
-    const accountPopover = document.getElementById('accountPopover');
-    const signOutModal = document.getElementById('signOutModal');
-    const signOutYesButton = document.getElementById('signOutYesButton');
-    const signOutNoButton = document.getElementById('signOutNoButton');
-    const loginRequiredModal = document.getElementById('loginRequiredModal');
-    const loginRequiredError = document.getElementById('loginRequiredError');
     const downloadYesButton = document.getElementById('downloadYes');
     const downloadError = document.getElementById('downloadError');
     function syncBackgroundInert() {
       const drawerOpen = document.getElementById('sideDrawer').classList.contains('open');
-      const modalOpen = !publishModal.hidden || !appDetailsModal.hidden || !downloadModal.hidden || !updateModal.hidden || !authModal.hidden || !signOutModal.hidden || !loginRequiredModal.hidden;
+      const modalOpen = !publishModal.hidden || !appDetailsModal.hidden || !downloadModal.hidden || !updateModal.hidden;
       const blockBackground = drawerOpen || modalOpen;
       [document.querySelector('.topbar'), document.getElementById('inicio'), document.querySelector('footer')].forEach(element => { element.inert = blockBackground; });
       document.body.style.overflow = blockBackground ? 'hidden' : '';
       document.getElementById('sideDrawer').inert = modalOpen || !drawerOpen;
       document.getElementById('drawerBackdrop').inert = modalOpen;
-    }
-    function closeAccountPopover() {
-      accountPopover.hidden = true;
-      accountEmailButton.setAttribute('aria-expanded', 'false');
-    }
-    function updateAuthUi() {
-      const t = translations[currentLanguage] || translations['pt-BR'];
-      document.getElementById('accountButtonLabel').textContent = currentUser ? t.accountSignOut : t.accountSignIn;
-      document.getElementById('accountLoginIcon').hidden = Boolean(currentUser);
-      accountButton.hidden = Boolean(currentUser);
-      accountEmailControl.hidden = !currentUser;
-      accountEmailText.textContent = currentUser?.email || '';
-      accountEmailButton.title = currentUser?.email || '';
-      accountEmailButton.setAttribute('aria-label', currentUser?.email || '');
-      if (!currentUser) closeAccountPopover();
-      else if (!loginRequiredModal.hidden && pendingProtectedAction) {
-        const action = pendingProtectedAction; pendingProtectedAction = null;
-        loginRequiredModal.hidden = true; loginRequiredError.textContent = ''; loginRequiredError.hidden = true;
-        syncBackgroundInert(); setDrawer(false); continueProtectedAction(action);
-      }
-    }
-    function openSignOutConfirmation() {
-      closeAccountPopover(); signOutModal.hidden = false; syncBackgroundInert(); signOutNoButton.focus();
-    }
-    function closeSignOutConfirmation() {
-      signOutModal.hidden = true; syncBackgroundInert();
-      (currentUser ? accountEmailButton : accountButton).focus();
-    }
-    async function confirmSignOut() {
-      signOutYesButton.disabled = true;
-      try {
-        await localAuth.signOut();
-        currentUser = null; updateAuthUi(); render(); closeSignOutConfirmation();
-      } catch (error) { showToast(translations[currentLanguage].storageError); }
-      finally { signOutYesButton.disabled = false; }
-    }
-    function continueProtectedAction(action) {
-      if (!action || !currentUser) return;
-      if (action.type === 'publish') openPublishFlow();
-      else if (action.type === 'download') openDownloadConfirmation(action.appId);
-    }
-    function openLoginRequiredPrompt(action) {
-      if (currentUser) { continueProtectedAction(action); return; }
-      pendingProtectedAction = action;
-      loginRequiredError.textContent = ''; loginRequiredError.hidden = true;
-      loginRequiredModal.hidden = false; syncBackgroundInert(); document.getElementById('loginRequiredEmailButton').focus();
-    }
-    function closeLoginRequiredPrompt() {
-      const action = pendingProtectedAction; pendingProtectedAction = null;
-      loginRequiredModal.hidden = true; loginRequiredError.textContent = ''; loginRequiredError.hidden = true; syncBackgroundInert();
-      if (action?.type === 'publish') document.getElementById('exploreLink').focus();
-      else if (action?.type === 'download') focusAppCard(action.appId);
-    }
-    function openAuthFlow(continueToPublish = false) {
-      pendingPublishAfterAuth = continueToPublish; authForm.reset(); document.getElementById('authError').textContent = '';
-      const dialog = authModal.querySelector('.dialog');
-      authModal.classList.remove('is-opening');
-      const clearOpening = event => {
-        if (event.target === dialog && event.animationName === 'publishDialogFade') {
-          authModal.classList.remove('is-opening'); dialog.removeEventListener('animationend', clearOpening);
-        }
-      };
-      dialog.addEventListener('animationend', clearOpening);
-      authModal.classList.add('is-opening'); authModal.hidden = false;
-      syncBackgroundInert(); authEmail.focus();
-    }
-    function closeAuthFlow() {
-      authModal.hidden = true; authModal.classList.remove('is-opening'); pendingPublishAfterAuth = false;
-      authForm.reset(); document.getElementById('authError').textContent = ''; syncBackgroundInert();
-      (document.getElementById('sideDrawer').classList.contains('open') ? accountButton : document.getElementById('exploreLink')).focus();
-    }
-    function authErrorMessage(error) {
-      const t = translations[currentLanguage];
-      if (error?.code === 'auth/email-already-in-use') return t.authExists;
-      if (error?.code === 'auth/weak-password') return t.authWeak;
-      if (error?.code === 'auth/invalid-email') return t.authBadEmail;
-      if (error?.code === 'auth/invalid-credential') return t.authInvalid;
-      if (error?.code === 'auth/local-auth-unavailable' || error?.code === 'auth/local-storage-unavailable') return t.storageError;
-      return t.authGeneric;
-    }
-    async function submitAuth(createAccount) {
-      const errorBox = document.getElementById('authError'); errorBox.textContent = '';
-      if (authRequestPending) return;
-      authEmail.value = authEmail.value.trim();
-      if (!authForm.reportValidity()) return;
-      authRequestPending = true;
-      const signInButton = document.getElementById('authSignIn');
-      const createButton = document.getElementById('authCreate');
-      signInButton.disabled = true; createButton.disabled = true; authForm.setAttribute('aria-busy', 'true');
-      authPassword.autocomplete = createAccount ? 'new-password' : 'current-password';
-      try {
-        const credential = createAccount
-          ? await localAuth.createAccount(authEmail.value.trim(), authPassword.value)
-          : await localAuth.signInWithEmail(authEmail.value.trim(), authPassword.value);
-        const shouldPublish = pendingPublishAfterAuth;
-        const protectedAction = pendingProtectedAction; pendingProtectedAction = null;
-        loginRequiredModal.hidden = true; loginRequiredError.textContent = ''; loginRequiredError.hidden = true;
-        currentUser = credential.user; updateAuthUi(); render();
-        closeAuthFlow();
-        if (shouldPublish) openPublishFlow();
-        else if (protectedAction) continueProtectedAction(protectedAction);
-      } catch (error) { errorBox.textContent = authErrorMessage(error); }
-      finally { authRequestPending = false; signInButton.disabled = false; createButton.disabled = false; authForm.removeAttribute('aria-busy'); }
     }
     function animatePublishView(view, direction) {
       view.classList.remove('publish-slide-forward', 'publish-slide-backward');
@@ -1030,22 +794,6 @@
     function updateStep2Validity() {
       document.getElementById('step2Next').hidden = !(versionInput.value.trim() && pendingPublication.iconData && packageInput.value.trim() && categoryInput.value.trim());
     }
-    document.getElementById('loginRequiredEmailButton').addEventListener('click', () => { loginRequiredModal.hidden = true; openAuthFlow(false); });
-    document.getElementById('loginRequiredClose').addEventListener('click', closeLoginRequiredPrompt);
-    accountButton.addEventListener('click', () => { if (!currentUser) openAuthFlow(false); });
-    accountEmailButton.addEventListener('click', () => {
-      if (!currentUser) return;
-      accountPopover.hidden = !accountPopover.hidden;
-      accountEmailButton.setAttribute('aria-expanded', String(!accountPopover.hidden));
-    });
-    document.getElementById('signOutPromptButton').addEventListener('click', openSignOutConfirmation);
-    signOutNoButton.addEventListener('click', closeSignOutConfirmation);
-    signOutYesButton.addEventListener('click', confirmSignOut);
-    document.addEventListener('click', event => { if (!accountEmailControl.contains(event.target)) closeAccountPopover(); });
-    document.getElementById('authClose').addEventListener('click', closeAuthFlow);
-    document.getElementById('authCancel').addEventListener('click', closeAuthFlow);
-    authForm.addEventListener('submit', event => { event.preventDefault(); submitAuth(false); });
-    document.getElementById('authCreate').addEventListener('click', () => submitAuth(true));
     document.getElementById('publishClose').addEventListener('click', closePublishFlow);
     // O modal de publicação só fecha pelos controles explícitos.
     htmlFileInput.addEventListener('change', async () => {
@@ -1102,7 +850,7 @@
     document.getElementById('cancelBack').addEventListener('click', () => showPublishStep(3, 'backward'));
     document.getElementById('cancelOk').addEventListener('click', closePublishFlow);
     function publicationErrorMessage(error) {
-      return currentUser ? translations[currentLanguage].storageError : translations[currentLanguage].publishAuthRequired;
+      return translations[currentLanguage].storageError;
     }
     const publishYesButton = document.getElementById('publishYes');
     const publishNoButton = document.getElementById('publishNo');
@@ -1110,7 +858,6 @@
     publishYesButton.addEventListener('click', async () => {
       if (publishRequestPending) return;
       const publishError = document.getElementById('publishError');
-      if (!currentUser) { publishError.textContent = translations[currentLanguage].publishAuthRequired; publishError.hidden = false; return; }
       publishError.textContent = ''; publishError.hidden = true;
       publishRequestPending = true; publishYesButton.disabled = true; publishYesButton.setAttribute('aria-busy', 'true');
       publishYesButton.textContent = translations[currentLanguage].publishPending;
@@ -1128,7 +875,6 @@
       }
     });
     function openDownloadConfirmation(appId) {
-      if (!currentUser) { openLoginRequiredPrompt({ type: 'download', appId }); return; }
       selectedDownloadAppId = appId;
       const app = customApps.find(item => item.id === appId);
       const token = ++downloadPreparationToken;
@@ -1168,7 +914,7 @@
     // O modal de download também exige uma ação explícita para fechar.
     function openUpdateFlow(appId) {
       const app = customApps.find(item => item.id === appId);
-      if (!app || !currentUser || app.ownerUid !== currentUser.uid) return;
+      if (!app) return;
       selectedUpdateAppId = appId; updateVersionInput.value = app.version || ''; updateFileInput.value = '';
       document.getElementById('updateError').textContent = '';
       const dialog = updateModal.querySelector('.dialog');
@@ -1223,13 +969,6 @@
     }
     const BlueStoreAPI = window.BlueStoreAPI = Object.freeze({
       version: '1.0.0',
-      auth: Object.freeze({
-        getServices: async () => localAuth,
-        onStateChanged: localAuth.onStateChanged,
-        createAccount: localAuth.createAccount,
-        signInWithEmail: localAuth.signInWithEmail,
-        signOut: localAuth.signOut
-      }),
       catalog: Object.freeze({
         list: readPublishedApps,
         save: savePublishedApp,
@@ -1240,10 +979,6 @@
       downloads: Object.freeze({ file: downloadAppFile, save: saveAppDownload })
     });
     document.getElementById('downloadYes').addEventListener('click', async () => {
-      if (!currentUser) {
-        const appId = selectedDownloadAppId; closeDownloadConfirmation();
-        openLoginRequiredPrompt({ type: 'download', appId }); return;
-      }
       const app = customApps.find(item => item.id === selectedDownloadAppId);
       closeDownloadConfirmation();
       if (!app) return;
@@ -1293,7 +1028,7 @@
     document.addEventListener('click', event => {
       if (!gamesHelpPopover.hidden && !gamesHelpControl.contains(event.target)) setGamesHelpOpen(false);
     });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') { if (!gamesHelpPopover.hidden) { setGamesHelpOpen(false, true); return; } if (!signOutModal.hidden) closeSignOutConfirmation(); else if (!loginRequiredModal.hidden) closeLoginRequiredPrompt(); else if (!appDetailsModal.hidden) closeAppDetails(); else if (!downloadModal.hidden) closeDownloadConfirmation(); else if (!updateModal.hidden) closeUpdateFlow(); else if (!authModal.hidden) closeAuthFlow(); else if (!publishModal.hidden && !publishRequestPending) closePublishFlow(); setDrawer(false); } });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { if (!gamesHelpPopover.hidden) { setGamesHelpOpen(false, true); return; } if (!appDetailsModal.hidden) closeAppDetails(); else if (!downloadModal.hidden) closeDownloadConfirmation(); else if (!updateModal.hidden) closeUpdateFlow(); else if (!publishModal.hidden && !publishRequestPending) closePublishFlow(); setDrawer(false); } });
     const languageToggle = document.getElementById('languageToggle');
     const languageOptions = document.getElementById('languageOptions');
     languageToggle.setAttribute('aria-expanded', String(languageExpanded));
@@ -1329,7 +1064,6 @@
     search.addEventListener('blur', updateSearchMarquee);
     applyTheme(currentTheme);
     applyLanguage(currentLanguage);
-    initializeLocalAuth();
 
     async function bootBlueStore() {
       render();
